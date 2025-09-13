@@ -12,8 +12,7 @@ int main(int argc, char *argv[])
     switch(atoi(argv[1]))
     {
         case(1):{
-            Rotate rot(atoi(argv[2]), atof(argv[3]), argv[4]);
-            comVec result = Read(rot.filename_);
+            Rotate rot(atoi(argv[2]), atof(argv[3]), Read(argv[4]));
             rot.execute();
         } break;
         case(2):{
@@ -21,10 +20,12 @@ int main(int argc, char *argv[])
             sum.execute();
         }break;
         case(3):{
-            //InnerProd inner(null, null, argv[3])
+            InnerProd inner(atoi(argv[2]), Read(argv[3]), Read(argv[4]));
+            inner.execute();
         }break;
         case(4):{
-
+            InnerUnity unity( atoi(argv[2]), atoi(argv[3]), Read(argv[4]));
+            unity.execute();
         }break;
         default: return;
     }

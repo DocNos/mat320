@@ -1,3 +1,4 @@
+#include <iostream>
 #include "complex_operations.h"
 
 comVec Read(string filename)
@@ -19,4 +20,8 @@ comVec Read(string filename)
         }
     }
     return numbers;
+}
+
+void Rotate::execute(){
+    
 }

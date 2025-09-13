@@ -18,16 +18,16 @@ comVec Read(string filename);
     for x < 0) */
 class Rotate{
 public:
-    Rotate(int _numVals, float _angle, string _filename)
-    : numVals_(_numVals), angle_(_angle), filename_(_filename) 
+    Rotate(int _numVals, float _angle, comVec _data)
+    : numVals_(_numVals), angle_(_angle), data_(_data) 
     {}
 
     void execute();
-    string filename_;
 
 private:
     int numVals_;
     float angle_;
+    comVec data_;
     
 };
 /* 
@@ -49,15 +49,14 @@ private:
  two vectors given by the text files */
 class InnerProd{
 public:    
-    InnerProd(const comVec& _vec1,const comVec& _vec2
-        , string _filename)
-    : vec1_(_vec1), vec2_(_vec2), filename_(_filename) {}
+    InnerProd(int _N,const comVec& _vec1,const comVec& _vec2)
+    : N_(_N), vec1_(_vec1), vec2_(_vec2) {}
 
     void execute();
 
 private:
+    int N_; 
     comVec vec1_, vec2_;
-    string filename_;
 
 };
 /* complex inner product of the 
@@ -66,13 +65,15 @@ private:
  ( 1, e^(i2/N), (e^(i2/N))^2, ..., (e^(i2/N))^N-1 )*/
 class InnerUnity{
 public:
-    InnerUnity(const comVec& _vec1
-        ,const comVec& _vec2, string _filename)
-    : vec1_(_vec1), vec2_(_vec2), filename_(_filename) {}
+    InnerUnity(int _N, int _numComp, comVec _vec)
+    : N_(_N), numComp_(_numComp), vec1_(_vec) {}
 
-private:
-    comVec vec1_, vec2_;
-    string filename_;
+    void execute();
+private:    
+    int N_;
+    int numComp_;
+    comVec vec1_;
+
 };
 
 /*
