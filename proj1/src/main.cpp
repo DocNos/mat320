@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
         case(1):{
             Rotate rot(atoi(argv[2]), atof(argv[3]), Read(argv[4]));
             rot.execute();
+            rot.print();
         } break;
         case(2):{
             SumUnity sum(atoi(argv[2]), atoi(argv[3]));
@@ -27,8 +28,8 @@ int main(int argc, char *argv[])
             InnerUnity unity( atoi(argv[2]), atoi(argv[3]), Read(argv[4]));
             unity.execute();
         }break;
-        default: return;
+        default: return 0;
     }
-
+    return 0;
 }
 

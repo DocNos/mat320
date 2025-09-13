@@ -2,6 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <cmath>
+#include <iomanip>
 using string = std::string;
 using comVec = std::vector<std::complex<double>>; 
 using complex = std::complex<double>;
@@ -19,15 +21,18 @@ comVec Read(string filename);
 class Rotate{
 public:
     Rotate(int _numVals, float _angle, comVec _data)
-    : numVals_(_numVals), angle_(_angle), data_(_data) 
+    : numVals_(_numVals), angleScalar_(_angle), data_(_data) 
     {}
 
     void execute();
+    complex calculate(complex input);
+    void print();
 
 private:
     int numVals_;
-    float angle_;
+    float angleScalar_;
     comVec data_;
+    comVec result_;
     
 };
 /* 
