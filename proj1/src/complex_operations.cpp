@@ -81,12 +81,45 @@ void SumUnity::print(){
 
 ///////////////////////////////////////////////////////////////
 // Inner Product //////////////////////////////////////////////
+// Vector inner product: Given v1, v2 =
+//          sum(v1 * conjugate(v2))
 
 void InnerProd::execute(){
+    
+    //DebugPrint();
+    for(int i = 0; i < N_; ++i)
+    {
+        result_ += (vec1_[i] * std::conj(vec2_[i])); 
+        //std::cout << result_ << std::endl;
+    }
+    //std::cout << result_ << std::endl;
+}
+
+void InnerProd::print(){
+    
+    string op = result_.imag() < 0 ? " - " : " + ";        
+    //double imag_val = res.imag() < 0 ? -res.imag() : res.imag();
+    std::cout << std::fixed << std::setprecision(1) 
+              << result_.real() << op
+              << result_.imag() << "i" << std::endl;
 
 }
 
-
+void InnerProd::DebugPrint()
+{
+    std::cout << "Vec1: ";
+    for(int i = 0; i < N_; ++i)
+    {
+        std::cout << vec1_[i];
+    }
+    std::cout << std::endl;
+    std::cout << "Vec2: ";
+    for(int i = 0; i < N_; ++i)
+    {
+        std::cout << vec2_[i];
+    }
+    std::cout << std::endl;
+}
 ///////////////////////////////////////////////////////////////
 // Inner Unity ////////////////////////////////////////////////
 

@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
         case(3):{
             InnerProd inner(atoi(argv[2]), Read(argv[3]), Read(argv[4]));
             inner.execute();
+            inner.print();
         }break;
         case(4):{
             InnerUnity unity( atoi(argv[2]), atoi(argv[3]), Read(argv[4]));
