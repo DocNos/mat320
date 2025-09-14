@@ -148,7 +148,46 @@ If errors are discovered in expected outputs:
 5. **Update** - Fix all affected test files and documentation
 6. **Test** - Run the actual program to confirm fixes
 
-## 7. Quality Assurance Questions:
+## 7. Conversation Logging for AI Collaboration:
+
+### Purpose:
+Maintain continuity across long conversations and multiple sessions with AI assistants who have limited memory.
+
+### Log Structure Template:
+```markdown
+# [PROJECT_NAME]_CONVERSATION_LOG.md
+
+## Session [DATE] (AI Instance: [model_name])
+
+### [TIME] [Task Description]
+- **Action:** [What was accomplished]
+- **Key Decisions:** [Important choices made and rationale]
+- **Issues Found:** [Problems discovered]
+- **Resolution:** [How issues were resolved]
+- **Files Modified:** [List of changed files]
+- **Status:** [Current state: Complete/In Progress/Blocked]
+
+### [TIME] Current Status Summary
+- **Completed:** [List of finished components]
+- **In Progress:** [Current work items]
+- **Next Steps:** [What needs to be done next]
+- **Blockers:** [Any impediments]
+```
+
+### Logging Guidelines:
+- **Log at natural breakpoints** (after completing major tasks)
+- **Include rationale** for design decisions  
+- **Document issues and their resolutions** for future reference
+- **Update status regularly** to track progress
+- **Note file modifications** to understand change history
+
+### Benefits:
+- **Continuity across sessions** - New AI instances can understand project history
+- **Avoid rework** - Track what's been completed and decided
+- **Design decision history** - Remember why certain approaches were chosen
+- **Debugging aid** - Reference past issues and solutions
+
+## 8. Quality Assurance Questions:
 
 Before committing expected outputs, ask:
 - [ ] Did I show my work step-by-step?
@@ -156,7 +195,8 @@ Before committing expected outputs, ask:
 - [ ] Are the inputs and outputs clearly documented?
 - [ ] Did I check edge cases and sign changes?
 - [ ] Would another person be able to reproduce my calculation?
+- [ ] Have I updated the conversation log with key decisions?
 
 ---
 
-**Remember:** It's better to spend extra time getting expected outputs right than to debug incorrect test cases later.
+**Remember:** It's better to spend extra time getting expected outputs right than to debug incorrect test cases later. Keep a running log to maintain continuity across AI collaboration sessions.
