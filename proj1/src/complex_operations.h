@@ -45,10 +45,12 @@ public:
     : root_(_root), length_(_length) {}
 
     void execute();
+    void print();
 
 private:
     int root_;
     int length_;
+    complex result_;
 };
 /* the complex inner product of the 
  two vectors given by the text files */
@@ -97,7 +99,7 @@ x (angle multiplier), input.txt
 argc = 4: bin/complex_calc 2 8 5
 : positive integers N and k
  output: complex number sum of the first k powers 
- of the Nth root of unity e^(i2pi*N)
+ of the Nth root of unity e^(i2pi/N)
  1 + e^(i2pi/N) +(e^(i2pi/N))^2 + ... +(e^(i2pi/N))^k-1
 */
 
