@@ -62,32 +62,21 @@ void Rotate::print(){
 
 // 1 + e^(i2pi/N) +(e^(i2pi/N))^2 + ... +(e^(i2pi/N))^k-1
 void SumUnity::execute(){
-    //complex sum;
-    //std::cout<<result_ << std::endl;
     for(int i = 0; i < length_; ++i)
     {        
         double theta = (2.0 * M_PI * i) / root_;
         double real = cos(theta);
         double imag = sin(theta);
-        complex val(real, imag);
-        
-        result_ += val;
-        
+        complex val(real, imag);        
+        result_ += val;        
     }
 }
 
 void SumUnity::print(){
-    
-
     std::cout << std::fixed << std::setprecision(2) 
     << root_ << "th root, "<< length_ <<
      " powers:" << std::endl << result_.real() << " + " << result_.imag()
-     << "i" << std::endl;
-    //       
-        //double imag_val = result_.imag() < 0 ? -result_.imag() : result_.imag();
-        //std::cout //<< std::fixed << std::setprecision(1) 
-          //        << result_.real() << op << result_.imag() << "i" << std::endl;
-    
+     << "i" << std::endl;    
 }
 
 ///////////////////////////////////////////////////////////////
