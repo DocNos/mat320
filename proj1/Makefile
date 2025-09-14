@@ -140,12 +140,12 @@ generate-output:
 	@echo "1.0 - 2.0i" >> $(OUTPUTDIR)/part1_test2_neg.txt
 	@echo "0.0 + 3.0i" >> $(OUTPUTDIR)/part1_test2_neg.txt
 	@echo "Part 2 outputs:"
-	@echo "0.0 + 0.0i" > $(OUTPUTDIR)/part2_8_5.txt
-	@echo "0.0 + 0.0i" > $(OUTPUTDIR)/part2_4_3.txt
-	@echo "0.0 + 0.0i" > $(OUTPUTDIR)/part2_6_4.txt
+	@echo "0.0 + 2.41i" > $(OUTPUTDIR)/part2_8_5.txt
+	@echo "0.0 + 1.0i" > $(OUTPUTDIR)/part2_4_3.txt
+	@echo "0.0 + 1.73i" > $(OUTPUTDIR)/part2_6_4.txt
 	@echo "Part 3 outputs:"
-	@echo "3.0 + 5.0i" > $(OUTPUTDIR)/part3_vec1_vec2.txt
-	@echo "6.5 + 4.5i" > $(OUTPUTDIR)/part3_vec3_vec4.txt
+	@echo "2.0 + 2.0i" > $(OUTPUTDIR)/part3_vec1_vec2.txt
+	@echo "5.5 + 4.5i" > $(OUTPUTDIR)/part3_vec3_vec4.txt
 	@echo "Part 4 outputs:"
 	@echo "4.0 + 0.0i" > $(OUTPUTDIR)/part4_signal.txt
 	@echo "3.0 + 2.0i" > $(OUTPUTDIR)/part4_signal2.txt
