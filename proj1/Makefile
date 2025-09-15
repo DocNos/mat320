@@ -64,6 +64,7 @@ clean:
 	rm -f $(BINDIR)/$(TARGET)
 	rm -f $(BINDIR)/$(TARGET)_debug
 	rm -f $(BINDIR)/part1 $(BINDIR)/part2 $(BINDIR)/part3 $(BINDIR)/part4
+	rm -f $(BINDIR)/rot $(BINDIR)/sum $(BINDIR)/dot $(BINDIR)/prod
 	rm -f $(INPUTDIR)/*.txt
 	rm -f $(OUTPUTDIR)/*.txt
 	@echo "Clean complete"
@@ -249,6 +250,11 @@ help:
 	@echo "  make generate-test-files - Create sample input files"
 	@echo "  make generate-instructor-files - Create instructor test files"
 	@echo "  make generate-output - Create expected output files"
+	@echo "  make rot          - Build rot executable (Part 1)"
+	@echo "  make sum          - Build sum executable (Part 2)"
+	@echo "  make dot          - Build dot executable (Part 3)"
+	@echo "  make prod         - Build prod executable (Part 4)"
+	@echo "  make build-parts  - Build all individual executables"
 	@echo "  make help         - Show this help message"
 	@echo ""
 	@echo "Usage examples:"
@@ -257,7 +263,28 @@ help:
 	@echo "  Part 3: $(BINDIR)/$(TARGET) 3 N vec1.txt vec2.txt"
 	@echo "  Part 4: $(BINDIR)/$(TARGET) 4 N input.txt"
 
-# Specific compilation rules for individual parts (if needed)
+# Individual executables for each part (as expected by instructor)
+rot: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/rot $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built rot (Part 1: Rotation)"
+
+sum: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/sum $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built sum (Part 2: Sum of Unity)"
+
+dot: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/dot $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built dot (Part 3: Inner Product)"
+
+prod: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/prod $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built prod (Part 4: DFT Component)"
+
+# Build all individual executables
+build-parts: rot sum dot prod
+	@echo "All individual executables built"
+
+# Specific compilation rules for individual parts (legacy)
 part1: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/part1 $^ -lm
 
@@ -271,7 +298,7 @@ part4: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/part4 $^ -lm
 
 # Phony targets (not actual files)
-.PHONY: all release debug clean distclean test test-basic test-instructor test1 test2 test3 test4 generate-test-files generate-instructor-files generate-output help directories part1 part2 part3 part4
+.PHONY: all release debug clean distclean test test-basic test-instructor test1 test2 test3 test4 generate-test-files generate-instructor-files generate-output help directories part1 part2 part3 part4 rot sum dot prod build-parts
 
 # Dependencies (optional - can be auto-generated)
 -include $(OBJECTS:.o=.d)
