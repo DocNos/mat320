@@ -47,8 +47,6 @@ complex Rotate::calculate(complex input){
 void Rotate::print(){
     for(auto res: result_)
     {
-        //double realVal = res.real() + 0.0;
-        //double imagVal = res.imag() + 0.0;
         string op = res.imag() < 0 ? " - " : " + ";        
         double imag_val = res.imag() < 0 ? -res.imag() : res.imag();
         std::cout << std::fixed << std::setprecision(1) 
@@ -58,7 +56,6 @@ void Rotate::print(){
 
 ///////////////////////////////////////////////////////////////
 // Sum Unity //////////////////////////////////////////////////
-
 
 // 1 + e^(i2pi/N) +(e^(i2pi/N))^2 + ... +(e^(i2pi/N))^k-1
 void SumUnity::execute(){
@@ -83,6 +80,10 @@ void SumUnity::print(){
 // Inner Product //////////////////////////////////////////////
 // Vector inner product: Given v1, v2 =
 //          sum(v1 * conjugate(v2))
+
+complex InnerProd::result(){
+    return result_;
+}
 
 void InnerProd::execute(){
     
@@ -123,7 +124,46 @@ void InnerProd::DebugPrint()
 ///////////////////////////////////////////////////////////////
 // Inner Unity ////////////////////////////////////////////////
 
+void InnerUnity::makeUnityVec(){
+    for(int i = 0; i < N_; ++i)
+    {        
+        double theta = (2.0 * M_PI * i) / N_;
+        double real = cos(theta);
+        double imag = sin(theta);
+        complex val(real, imag);        
+        unity_.emplace_back(val);  
+    }
+}
+
 void InnerUnity::execute(){
+    makeUnityVec();
+    InnerProd inner(N_, vec1_, unity_);
+    inner.execute();
+    result_ = inner.result();
+
 
 }
 
+void InnerUnity::print(){
+    string op = result_.imag() < 0 ? " - " : " + ";        
+    double imag_val = result_.imag() < 0 ? -result_.imag() : result_.imag();
+    std::cout << std::fixed << std::setprecision(1) 
+              << result_.real() << op
+              << imag_val << "i" << std::endl;
+}
+
+void InnerUnity::DebugPrint()
+{
+    std::cout << "Input Vec: ";
+    for(int i = 0; i < N_; ++i)
+    {
+        std::cout << vec1_[i];
+    }
+    std::cout << std::endl;
+    std::cout << "Unity Vec: ";
+    for(int i = 0; i < N_; ++i)
+    {
+        std::cout << unity_[i];
+    }
+    std::cout << std::endl;
+}

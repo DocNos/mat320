@@ -1,0 +1,99 @@
+Here are some simple values to test for Project 1.
+All of these can be checked by hand easily.  You
+should also make up your own examples with some 
+larger values of N.
+
+----------------------------------------
+
+Input text files:
+
+f1.txt:
+1+1i
+2-1i
+
+f2.txt:
+3+1i
+1-3i
+
+----------------------------------------
+
+Part 1:
+Rotation of complex numbers by 2*PI*x
+binary (executable): rot
+
+sample command: 
+./rot 2 f1.txt 0.25
+output:
+-1+1i
+1+2i
+
+sample command: 
+./rot 2 f2.txt 0.25
+output:
+-1+3i
+3+1i
+
+----------------------------------------
+
+Part 2:
+Sums of Roots of Unity
+binary (executable): sum
+
+sample command: 
+./sum 4 2
+output:
+1+1i
+
+sample command: 
+./sum 3 2
+output:
+0.5+0.866025i
+
+sample command: 
+./sum 8 7
+output:
+-0.707107+0.707107i
+
+----------------------------------------
+
+Part 3:
+Complex dot product of two vectors
+binary (executable): dot
+
+input text file f1.txt:
+1+1i
+2-1i
+
+input text file f2.txt:
+3+1i
+1-3i
+
+sample command:
+./dot 2 f1.txt f2.txt
+output value:
+9+7i
+
+// ie. (1+i)*(3-i) + (2-i)*(1+3i) = 4+2i + 5+5i = 9+7i
+
+----------------------------------------
+
+Part 4:
+Dot product with vector of roots of unity
+binary (executable): prod
+
+input text file f1.txt:
+1+1i
+2-1i
+command line: ./prod 2 f1.txt
+output value (complex dot product)
+-1+2i
+
+input text file f2.txt:
+3+1i
+1-3i
+command line: ./prod 2 f2.txt
+output value (complex dot product)
+2+4i
+
+----------------------------------------
+

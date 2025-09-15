@@ -61,13 +61,15 @@ make distclean         # Full cleanup including directories
 
 
 ### Generate Test Files
-make test-files             # Create input and output files
-make generate-test-files    # Create input test files
-make generate-output       # Create expected output files
+make test-files                  # Create input and output files
+make generate-test-files         # Create input test files
+make generate-instructor-files   # Create instructor test files (f1.txt, f2.txt)
+make generate-output            # Create expected output files
 
 ### Testing
 make test              # Run all comprehensive tests
 make test-basic        # Run basic tests only
+make test-instructor   # Run instructor-provided test cases
 make test1             # Test Part 1 (rotation) only
 make test2             # Test Part 2 (sum of powers) only
 make test3             # Test Part 3 (inner product) only

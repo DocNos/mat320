@@ -64,6 +64,7 @@ clean:
 	rm -f $(BINDIR)/$(TARGET)
 	rm -f $(BINDIR)/$(TARGET)_debug
 	rm -f $(BINDIR)/part1 $(BINDIR)/part2 $(BINDIR)/part3 $(BINDIR)/part4
+	rm -f $(BINDIR)/rot $(BINDIR)/sum $(BINDIR)/dot $(BINDIR)/prod
 	rm -f $(INPUTDIR)/*.txt
 	rm -f $(OUTPUTDIR)/*.txt
 	@echo "Clean complete"
@@ -102,6 +103,26 @@ test1: release
 	$(BINDIR)/$(TARGET) 1 3 -0.25 $(INPUTDIR)/test1.txt
 	$(BINDIR)/$(TARGET) 1 4 0.5 $(INPUTDIR)/test2.txt
 	$(BINDIR)/$(TARGET) 1 4 -0.5 $(INPUTDIR)/test2.txt
+
+# Test with instructor-provided test cases
+test-instructor: release generate-instructor-files
+	@echo "Testing with instructor-provided test cases..."
+	@echo "========================"
+	@echo "Part 1: Rotation tests"
+	$(BINDIR)/$(TARGET) 1 2 0.25 $(INPUTDIR)/f1.txt
+	$(BINDIR)/$(TARGET) 1 2 0.25 $(INPUTDIR)/f2.txt
+	@echo "========================"
+	@echo "Part 2: Sum of unity tests"
+	$(BINDIR)/$(TARGET) 2 4 2
+	$(BINDIR)/$(TARGET) 2 3 2
+	$(BINDIR)/$(TARGET) 2 8 7
+	@echo "========================"
+	@echo "Part 3: Dot product test"
+	$(BINDIR)/$(TARGET) 3 2 $(INPUTDIR)/f1.txt $(INPUTDIR)/f2.txt
+	@echo "========================"
+	@echo "Part 4: DFT component tests"
+	$(BINDIR)/$(TARGET) 4 2 $(INPUTDIR)/f1.txt
+	$(BINDIR)/$(TARGET) 4 2 $(INPUTDIR)/f2.txt
 
 test2: release
 	@echo "Testing Part 2: Sum of powers"
@@ -149,6 +170,17 @@ generate-output:
 	@echo "Part 4 outputs:"
 	@echo "4.0 + 0.0i" > $(OUTPUTDIR)/part4_signal.txt
 	@echo "3.0 + 2.0i" > $(OUTPUTDIR)/part4_signal2.txt
+	@echo "Instructor test expected outputs:"
+	@echo "-1.0 + 1.0i" > $(OUTPUTDIR)/instructor_part1_f1.txt
+	@echo "1.0 + 2.0i" >> $(OUTPUTDIR)/instructor_part1_f1.txt
+	@echo "-1.0 + 3.0i" > $(OUTPUTDIR)/instructor_part1_f2.txt
+	@echo "3.0 + 1.0i" >> $(OUTPUTDIR)/instructor_part1_f2.txt
+	@echo "1.0 + 1.0i" > $(OUTPUTDIR)/instructor_part2_4_2.txt
+	@echo "0.5 + 0.866025i" > $(OUTPUTDIR)/instructor_part2_3_2.txt
+	@echo "-0.707107 + 0.707107i" > $(OUTPUTDIR)/instructor_part2_8_7.txt
+	@echo "9.0 + 7.0i" > $(OUTPUTDIR)/instructor_part3_f1_f2.txt
+	@echo "-1.0 + 2.0i" > $(OUTPUTDIR)/instructor_part4_f1.txt
+	@echo "2.0 + 4.0i" > $(OUTPUTDIR)/instructor_part4_f2.txt
 	@echo "Expected output files generated in $(OUTPUTDIR)/"
 
 # Generate sample input files for testing
@@ -185,6 +217,16 @@ generate-test-files:
 	@echo "1.0 + 2.0i" >> $(INPUTDIR)/signal2.txt
 	@echo "Test files generated in $(INPUTDIR)/"
 
+# Generate instructor-provided test files
+generate-instructor-files:
+	@mkdir -p $(INPUTDIR)
+	@echo "Generating instructor test files..."
+	@echo "1.0 + 1.0i" > $(INPUTDIR)/f1.txt
+	@echo "2.0 - 1.0i" >> $(INPUTDIR)/f1.txt
+	@echo "3.0 + 1.0i" > $(INPUTDIR)/f2.txt
+	@echo "1.0 - 3.0i" >> $(INPUTDIR)/f2.txt
+	@echo "Instructor test files generated: f1.txt, f2.txt"
+
 
 test-files: generate-test-files generate-output
 
@@ -200,12 +242,19 @@ help:
 	@echo "  make distclean    - Remove all generated files and directories"
 	@echo "  make test         - Run all comprehensive tests"
 	@echo "  make test-basic   - Run basic tests only"
+	@echo "  make test-instructor - Run instructor test cases"
 	@echo "  make test1        - Test Part 1 only (rotation)"
 	@echo "  make test2        - Test Part 2 only (sum of powers)"
 	@echo "  make test3        - Test Part 3 only (inner product)"
 	@echo "  make test4        - Test Part 4 only (DFT component)"
 	@echo "  make generate-test-files - Create sample input files"
+	@echo "  make generate-instructor-files - Create instructor test files"
 	@echo "  make generate-output - Create expected output files"
+	@echo "  make rot          - Build rot executable (Part 1)"
+	@echo "  make sum          - Build sum executable (Part 2)"
+	@echo "  make dot          - Build dot executable (Part 3)"
+	@echo "  make prod         - Build prod executable (Part 4)"
+	@echo "  make build-parts  - Build all individual executables"
 	@echo "  make help         - Show this help message"
 	@echo ""
 	@echo "Usage examples:"
@@ -214,7 +263,28 @@ help:
 	@echo "  Part 3: $(BINDIR)/$(TARGET) 3 N vec1.txt vec2.txt"
 	@echo "  Part 4: $(BINDIR)/$(TARGET) 4 N input.txt"
 
-# Specific compilation rules for individual parts (if needed)
+# Individual executables for each part (as expected by instructor)
+rot: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/rot $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built rot (Part 1: Rotation)"
+
+sum: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/sum $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built sum (Part 2: Sum of Unity)"
+
+dot: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/dot $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built dot (Part 3: Inner Product)"
+
+prod: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/prod $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o -lm
+	@echo "Built prod (Part 4: DFT Component)"
+
+# Build all individual executables
+build-parts: rot sum dot prod
+	@echo "All individual executables built"
+
+# Specific compilation rules for individual parts (legacy)
 part1: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/part1 $^ -lm
 
@@ -228,7 +298,7 @@ part4: directories $(OBJDIR)/main.o $(OBJDIR)/complex_operations.o
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/part4 $^ -lm
 
 # Phony targets (not actual files)
-.PHONY: all release debug clean distclean test test-basic test1 test2 test3 test4 generate-test-files generate-output help directories part1 part2 part3 part4
+.PHONY: all release debug clean distclean test test-basic test-instructor test1 test2 test3 test4 generate-test-files generate-instructor-files generate-output help directories part1 part2 part3 part4 rot sum dot prod build-parts
 
 # Dependencies (optional - can be auto-generated)
 -include $(OBJECTS:.o=.d)
