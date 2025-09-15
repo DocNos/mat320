@@ -29,23 +29,27 @@ Rotates N complex numbers by angle 2πx, where:
 - x > 0: counterclockwise rotation
 - x < 0: clockwise rotation
 
-**Usage:** `./bin/complex_calc 1 N x input.txt`
+**Combined Usage:** `./bin/complex_calc 1 N x input/f1.txt`  
+**Individual Usage:** `./bin/rot N x input/f1.txt`
 
 ### Part 2: Sum of Powers of Roots of Unity
 Calculates: 1 + e^(i2π/N) + (e^(i2π/N))² + ... + (e^(i2π/N))^(k-1)
 
-**Usage:** `./bin/complex_calc 2 N k`
+**Combined Usage:** `./bin/complex_calc 2 N k`  
+**Individual Usage:** `./bin/sum N k`
 
 ### Part 3: Complex Inner Product
 Computes the complex inner product of two vectors from input files.
 
-**Usage:** `./bin/complex_calc 3 N vec1.txt vec2.txt`
+**Combined Usage:** `./bin/complex_calc 3 N input/f1.txt input/f2.txt`  
+**Individual Usage:** `./bin/dot N input/f1.txt input/f2.txt`
 
 ### Part 4: DFT Component
 Calculates the inner product of an input vector with the roots of unity vector:
 (1, e^(i2π/N), (e^(i2π/N))², ..., (e^(i2π/N))^(N-1))
 
-**Usage:** `./bin/complex_calc 4 N input.txt`
+**Combined Usage:** `./bin/complex_calc 4 N input/f1.txt`  
+**Individual Usage:** `./bin/prod N input/f1.txt`
 
 ## Building and Running
 
@@ -55,7 +59,12 @@ Calculates the inner product of an input vector with the roots of unity vector:
 
 ### Build Commands
 make                    # Build release version
-make debug             # Build with debug symbols  
+make debug             # Build with debug symbols
+make build-parts       # Build individual executables (rot, sum, dot, prod)
+make rot               # Build rot executable (Part 1)
+make sum               # Build sum executable (Part 2)  
+make dot               # Build dot executable (Part 3)
+make prod              # Build prod executable (Part 4)
 make clean             # Remove build and test files
 make distclean         # Full cleanup including directories
 
@@ -92,20 +101,28 @@ Results are displayed in the same format as input:
 ## Examples
 
 ### Example 1: Rotation
-# Rotate 3 complex numbers by π/2 (90° counterclockwise)
-./bin/complex_calc 1 3 0.25 input/test1.txt
+# Combined executable: Rotate 2 complex numbers by π/2 (90° counterclockwise)
+./bin/complex_calc 1 2 0.25 input/f1.txt
+# Individual executable: Rotate 2 complex numbers from f1.txt by π/2
+./bin/rot 2 0.25 input/f1.txt
 
 ### Example 2: Sum of Powers
-# Sum first 5 powers of 8th root of unity
+# Combined executable: Sum first 5 powers of 8th root of unity
 ./bin/complex_calc 2 8 5
+# Individual executable: Sum first 2 powers of 4th root of unity
+./bin/sum 4 2
 
 ### Example 3: Inner Product
-# Inner product of two 3-element vectors
+# Combined executable: Inner product of two 3-element vectors
 ./bin/complex_calc 3 3 input/vec1.txt input/vec2.txt
+# Individual executable: Inner product of f1.txt and f2.txt
+./bin/dot 2 input/f1.txt input/f2.txt
 
 ### Example 4: DFT Component
-# DFT component of 4-element signal
+# Combined executable: DFT component of 4-element signal
 ./bin/complex_calc 4 4 input/signal.txt
+# Individual executable: DFT component of f1.txt
+./bin/prod 2 input/f1.txt
 
 ## AI Disclosure
 
