@@ -62,6 +62,7 @@ public:
     void execute();
     void print();
     void DebugPrint();
+    complex result();
 
 private:
     int N_; 
@@ -73,16 +74,22 @@ private:
  vector given by the text file with the complex
  vector of roots of unity:
  ( 1, e^(i2/N), (e^(i2/N))^2, ..., (e^(i2/N))^N-1 )*/
+  // NOT A SUM, VECTOR OF UNITY ROOTS!!
 class InnerUnity{
 public:
-    InnerUnity(int _N, int _numComp, comVec _vec)
-    : N_(_N), numComp_(_numComp), vec1_(_vec) {}
+    InnerUnity(int _N, comVec _vec)
+    : N_(_N), vec1_(_vec) {}
 
+    void makeUnityVec();
     void execute();
+    void print();
+    void DebugPrint();
 private:    
     int N_;
-    int numComp_;
+    //int numComp_;
     comVec vec1_;
+    comVec unity_;
+    complex result_;
 
 };
 
