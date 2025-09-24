@@ -32,9 +32,12 @@ DEPSDIR = deps
 BUILDDIR = build
 
 # Build Configuration Variables
-TARGET = dft_fft
-SOURCES = $(wildcard $(SRCDIR)/*.cpp)
-OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+DFT_TARGET = dft1
+FFT_TARGET = fft1
+DFT_SOURCES = $(SRCDIR)/dft1.cpp
+FFT_SOURCES = $(SRCDIR)/fft1.cpp
+DFT_OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(DFT_SOURCES))
+FFT_OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(FFT_SOURCES))
 HEADERS = $(wildcard $(INCDIR)/*.h $(INCDIR)/*.hpp)
 
 # Build tools
@@ -53,13 +56,20 @@ ARFLAGS = rcs
 # Default target
 all: release
 
+# Build both programs
+both: directories $(BINDIR)/$(DFT_TARGET) $(BINDIR)/$(FFT_TARGET)
+
 # Release build
 release: CXXFLAGS += $(RELEASEFLAGS)
-release: directories $(BINDIR)/$(TARGET)
+release: both
 
-# Debug build
+# Debug build  
 debug: CXXFLAGS += $(DEBUGFLAGS)
-debug: directories $(BINDIR)/$(TARGET)_debug
+debug: directories $(BINDIR)/$(DFT_TARGET)_debug $(BINDIR)/$(FFT_TARGET)_debug
+
+# Individual program builds
+dft1: directories $(BINDIR)/$(DFT_TARGET)
+fft1: directories $(BINDIR)/$(FFT_TARGET)
 
 # Create necessary directories
 directories:
@@ -73,14 +83,24 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -I$(INCDIR) -c -o $@ $<
 
-# Linking pattern (release)
-$(BINDIR)/$(TARGET): $(OBJECTS)
+# Linking patterns for individual programs
+$(BINDIR)/$(DFT_TARGET): $(DFT_OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 	@echo "Build complete: $@"
 
-# Linking pattern (debug)
-$(BINDIR)/$(TARGET)_debug: $(OBJECTS)
+$(BINDIR)/$(FFT_TARGET): $(FFT_OBJECTS)
+	@mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "Build complete: $@"
+
+# Debug linking patterns
+$(BINDIR)/$(DFT_TARGET)_debug: $(DFT_OBJECTS)
+	@mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "Debug build complete: $@"
+
+$(BINDIR)/$(FFT_TARGET)_debug: $(FFT_OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 	@echo "Debug build complete: $@"
@@ -89,19 +109,25 @@ $(BINDIR)/$(TARGET)_debug: $(OBJECTS)
 # TEST TARGETS
 ################################################################################
 
-test: $(BINDIR)/$(TARGET)
-	@echo "Running test suite..."
+test: both
+	@echo "Running test suite for both DFT and FFT..."
 	@echo "Tests not yet implemented"
 
-test-unit: $(BINDIR)/$(TARGET)
-	@echo "Running unit tests..."
-	@echo "Unit tests not yet implemented"
+test-dft: $(BINDIR)/$(DFT_TARGET)
+	@echo "Testing DFT implementation..."
+	./$(BINDIR)/$(DFT_TARGET) $(INPUTDIR)/Input01.txt 8
+	./$(BINDIR)/$(DFT_TARGET) $(INPUTDIR)/Input02.txt 8
 
-test-integration: $(BINDIR)/$(TARGET)
-	@echo "Running integration tests..."
-	@echo "Integration tests not yet implemented"
+test-fft: $(BINDIR)/$(FFT_TARGET)
+	@echo "Testing FFT implementation..."
+	./$(BINDIR)/$(FFT_TARGET) $(INPUTDIR)/Input01.txt 8
+	./$(BINDIR)/$(FFT_TARGET) $(INPUTDIR)/Input02.txt 8
 
-test-quick: $(BINDIR)/$(TARGET)
+test-both: test-dft test-fft
+	@echo "Comparing DFT and FFT outputs..."
+	@echo "Output comparison not yet implemented"
+
+test-quick: both
 	@echo "Running quick smoke tests..."
 	@echo "Quick tests not yet implemented"
 
@@ -144,19 +170,23 @@ docs:
 	@echo "Documentation generation not yet implemented"
 
 help:
-	@echo "$(TARGET) - DFT and FFT Implementation"
-	@echo "======================================"
+	@echo "DFT and FFT Implementation"
+	@echo "============================="
 	@echo ""
 	@echo "Build Targets:"
-	@echo "  make / make all     - Build release version"
-	@echo "  make release        - Optimized production build"
+	@echo "  make / make all     - Build both programs (release)"
+	@echo "  make both           - Build both dft1 and fft1"
+	@echo "  make dft1           - Build DFT program only"
+	@echo "  make fft1           - Build FFT program only"
 	@echo "  make debug          - Debug build with symbols"
 	@echo "  make clean          - Remove build artifacts"
 	@echo "  make distclean      - Complete cleanup"
 	@echo ""
 	@echo "Test Targets:"
 	@echo "  make test           - Run all tests"
-	@echo "  make test-unit      - Run unit tests"
+	@echo "  make test-dft       - Test DFT only"
+	@echo "  make test-fft       - Test FFT only"
+	@echo "  make test-both      - Test both and compare"
 	@echo "  make test-quick     - Fast smoke tests"
 	@echo ""
 	@echo "Generation Targets:"
@@ -164,13 +194,9 @@ help:
 	@echo "  make generate-outputs  - Create expected outputs"
 	@echo "  make generate-tests    - Create all test files"
 	@echo ""
-	@echo "Quality Targets:"
-	@echo "  make check          - Static analysis"
-	@echo "  make format         - Format source code"
-	@echo "  make docs           - Generate documentation"
-	@echo ""
 	@echo "Usage Examples:"
-	@echo "  ./$(BINDIR)/$(TARGET) [args]"
+	@echo "  ./$(BINDIR)/$(DFT_TARGET) input/Input01.txt 8"
+	@echo "  ./$(BINDIR)/$(FFT_TARGET) input/Input01.txt 8"
 
 ################################################################################
 # CLEANUP TARGETS
@@ -179,8 +205,10 @@ help:
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf $(OBJDIR)/*.o
-	rm -f $(BINDIR)/$(TARGET)
-	rm -f $(BINDIR)/$(TARGET)_debug
+	rm -f $(BINDIR)/$(DFT_TARGET)
+	rm -f $(BINDIR)/$(FFT_TARGET)
+	rm -f $(BINDIR)/$(DFT_TARGET)_debug
+	rm -f $(BINDIR)/$(FFT_TARGET)_debug
 
 distclean: clean
 	@echo "Full cleanup..."
@@ -196,8 +224,8 @@ mrproper: distclean
 # PHONY TARGETS
 ################################################################################
 
-.PHONY: all build release debug test-build clean distclean mrproper \
-        test test-unit test-integration test-quick \
+.PHONY: all both release debug clean distclean mrproper \
+        test test-dft test-fft test-both test-quick \
         check lint format docs help \
         generate-inputs generate-outputs generate-tests \
-        directories
+        directories dft1 fft1
