@@ -13,6 +13,8 @@ using complex = std::complex<double>;
 using string = std::string;
 using CVector = std::vector<complex>;
 
+void PrintFormattedVector(CVector input);
+
 class DFT{
 public:
     DFT(string _filename, int _size)
@@ -23,8 +25,6 @@ public:
     void Execute();
     void Print();
 
-
-private:
     string filename_;
     int size_;
     CVector numbers_;

@@ -16,7 +16,11 @@ int main(int argc, char*argv[])
         std::cerr << "Not enough arguments" << std::endl;
         return 1;
     }
+    //std::cout << argv[1] << " " << atoi(argv[2]) << std::endl;
     DFT fourier = DFT(argv[1], atoi(argv[2]));
+    fourier.Read();
+    //std::cout << fourier.numbers_.size() << std::endl;
+    //PrintFormattedVector(fourier.numbers_);
     fourier.Execute();
     fourier.Print();
     return 0;

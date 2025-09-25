@@ -40,12 +40,14 @@ void DFT::Execute()
             complex twiddle(cos(angle), sin(angle));
             sum += numbers_[n] * twiddle;
         }
-        result_[k] = sum;        
+        result_.emplace_back(sum);        
     }
 }
 
 void DFT::Print()
 {
+    PrintFormattedVector(result_);
+    /*
     for(int i = 0; i < size_; ++i)
     {
         string op = result_[i].imag() < 0 ? " - " : " + ";        
@@ -54,5 +56,36 @@ void DFT::Print()
               << result_[i].real() << op
               << result_[i].imag() << "i" << std::endl;
     }
+              */
     
+}
+
+void PrintFormattedVector(CVector input)
+{
+    for(auto num: input)
+    {
+        double real = num.real();
+        double imag = num.imag();
+        if(real == (int)real)
+        {
+            std::cout << std::fixed << std::setprecision(0)
+            << (int)real;
+        } else {
+            std::cout << std::fixed << std::setprecision(3) << real;
+        }
+        if(imag >= 0)
+        {
+            //std::setprecision(0);
+            std::cout << "+";
+        } 
+        if(imag == (int)imag)
+        {
+            std::cout << std::fixed << std::setprecision(0)
+            <<  (int)imag;
+        } else {
+            std::cout << std::fixed << std::setprecision(3) << imag;
+        }
+        
+        std::cout << "i" << std::endl;
+    }
 }

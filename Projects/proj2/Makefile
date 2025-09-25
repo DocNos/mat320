@@ -18,27 +18,26 @@ RELEASEFLAGS = -O2 -DNDEBUG
 
 # Directory Variables (genStandards compliant)
 SRCDIR = src
+DFT_SRCDIR = $(SRCDIR)/dft
+FFT_SRCDIR = $(SRCDIR)/fft
 INCDIR = include
 BINDIR = bin
 OBJDIR = obj
-LIBDIR = lib
-DATADIR = data
+DFT_OBJDIR = $(OBJDIR)/dft
+FFT_OBJDIR = $(OBJDIR)/fft
 INPUTDIR = input
 OUTPUTDIR = output
 TESTDIR = tests
 DOCDIR = docs
-SCRIPTDIR = scripts
-DEPSDIR = deps
-BUILDDIR = build
 
 # Build Configuration Variables
 DFT_TARGET = dft1
 FFT_TARGET = fft1
-DFT_SOURCES = $(SRCDIR)/dft1.cpp
-FFT_SOURCES = $(SRCDIR)/fft1.cpp
-DFT_OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(DFT_SOURCES))
-FFT_OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(FFT_SOURCES))
-HEADERS = $(wildcard $(INCDIR)/*.h $(INCDIR)/*.hpp)
+DFT_SOURCES = $(wildcard $(DFT_SRCDIR)/*.cpp)
+FFT_SOURCES = $(wildcard $(FFT_SRCDIR)/*.cpp)
+DFT_OBJECTS = $(patsubst $(DFT_SRCDIR)/%.cpp,$(DFT_OBJDIR)/%.o,$(DFT_SOURCES))
+FFT_OBJECTS = $(patsubst $(FFT_SRCDIR)/%.cpp,$(FFT_OBJDIR)/%.o,$(FFT_SOURCES))
+HEADERS = $(wildcard $(INCDIR)/*.h $(INCDIR)/*.hpp $(DFT_SRCDIR)/*.h $(FFT_SRCDIR)/*.h)
 
 # Build tools
 CC = gcc
@@ -73,15 +72,20 @@ fft1: directories $(BINDIR)/$(FFT_TARGET)
 
 # Create necessary directories
 directories:
-	@mkdir -p $(OBJDIR)
+	@mkdir -p $(DFT_OBJDIR)
+	@mkdir -p $(FFT_OBJDIR)
 	@mkdir -p $(BINDIR)
 	@mkdir -p $(INPUTDIR)
 	@mkdir -p $(OUTPUTDIR)
 
-# Compilation pattern
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	@mkdir -p $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -I$(INCDIR) -c -o $@ $<
+# Compilation patterns for each subdirectory
+$(DFT_OBJDIR)/%.o: $(DFT_SRCDIR)/%.cpp
+	@mkdir -p $(DFT_OBJDIR)
+	$(CXX) $(CXXFLAGS) -I$(INCDIR) -I$(DFT_SRCDIR) -c -o $@ $<
+
+$(FFT_OBJDIR)/%.o: $(FFT_SRCDIR)/%.cpp
+	@mkdir -p $(FFT_OBJDIR)
+	$(CXX) $(CXXFLAGS) -I$(INCDIR) -I$(FFT_SRCDIR) -c -o $@ $<
 
 # Linking patterns for individual programs
 $(BINDIR)/$(DFT_TARGET): $(DFT_OBJECTS)
@@ -204,7 +208,8 @@ help:
 
 clean:
 	@echo "Cleaning build artifacts..."
-	rm -rf $(OBJDIR)/*.o
+	rm -rf $(DFT_OBJDIR)/*.o
+	rm -rf $(FFT_OBJDIR)/*.o
 	rm -f $(BINDIR)/$(DFT_TARGET)
 	rm -f $(BINDIR)/$(FFT_TARGET)
 	rm -f $(BINDIR)/$(DFT_TARGET)_debug
