@@ -17,7 +17,7 @@ int main(int argc, char*argv[])
         return 1;
     }
     DFT fourier = DFT(argv[1], atoi(argv[2]));
-    CVector result = fourier.Execute();
+    fourier.Execute();
     fourier.Print();
     return 0;
 }

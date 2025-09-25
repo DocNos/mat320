@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 
 using complex = std::complex<double>;
 using string = std::string;
@@ -16,10 +17,10 @@ class DFT{
 public:
     DFT(string _filename, int _size)
     : filename_(_filename), size_(_size)
-    , numbers_(CVector(size_))
+    , numbers_(CVector()), result_(CVector())
     {}
     void Read();
-    CVector Execute();
+    void Execute();
     void Print();
 
 
@@ -27,4 +28,5 @@ private:
     string filename_;
     int size_;
     CVector numbers_;
+    CVector result_;
 };
