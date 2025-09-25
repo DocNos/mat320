@@ -113,9 +113,7 @@ $(BINDIR)/$(FFT_TARGET)_debug: $(FFT_OBJECTS)
 # TEST TARGETS
 ################################################################################
 
-test: both
-	@echo "Running test suite for both DFT and FFT..."
-	@echo "Tests not yet implemented"
+test: test-both
 
 test-dft: $(BINDIR)/$(DFT_TARGET)
 	@echo "Testing DFT implementation..."
@@ -129,49 +127,26 @@ test-fft: $(BINDIR)/$(FFT_TARGET)
 
 test-both: test-dft test-fft
 	@echo "Comparing DFT and FFT outputs..."
-	@echo "Output comparison not yet implemented"
+	@echo "=== Input01.txt Comparison ==="
+	@echo "DFT Output:"
+	@./$(BINDIR)/$(DFT_TARGET) $(INPUTDIR)/Input01.txt 8
+	@echo "FFT Output:"  
+	@./$(BINDIR)/$(FFT_TARGET) $(INPUTDIR)/Input01.txt 8
+	@echo "=== Input02.txt Comparison ==="
+	@echo "DFT Output:"
+	@./$(BINDIR)/$(DFT_TARGET) $(INPUTDIR)/Input02.txt 8
+	@echo "FFT Output:"
+	@./$(BINDIR)/$(FFT_TARGET) $(INPUTDIR)/Input02.txt 8
 
 test-quick: both
 	@echo "Running quick smoke tests..."
-	@echo "Quick tests not yet implemented"
+	@echo "DFT Test:"
+	@./$(BINDIR)/$(DFT_TARGET) $(INPUTDIR)/Input01.txt 8 | head -2
+	@echo "FFT Test:"
+	@./$(BINDIR)/$(FFT_TARGET) $(INPUTDIR)/Input01.txt 8 | head -2
 
-################################################################################
-# FILE GENERATION TARGETS
-################################################################################
-
-generate-inputs:
-	@echo "Generating test input files..."
-	@echo "Input generation not yet implemented"
-
-generate-outputs:
-	@echo "Generating expected output files..."
-	@echo "Output generation not yet implemented"
-
-generate-tests: generate-inputs generate-outputs
-
-################################################################################
-# ANALYSIS AND QUALITY TARGETS
-################################################################################
-
-check:
-	@echo "Running static analysis..."
-	@echo "Static analysis not yet implemented"
-
-lint:
-	@echo "Running code style checking..."
-	@echo "Linting not yet implemented"
-
-format:
-	@echo "Auto-formatting source code..."
-	@echo "Formatting not yet implemented"
-
-################################################################################
-# DOCUMENTATION TARGETS
-################################################################################
-
-docs:
-	@echo "Generating documentation..."
-	@echo "Documentation generation not yet implemented"
+# Note: File generation, analysis, and documentation targets removed
+# as they are not needed for this assignment
 
 help:
 	@echo "DFT and FFT Implementation"
@@ -192,11 +167,6 @@ help:
 	@echo "  make test-fft       - Test FFT only"
 	@echo "  make test-both      - Test both and compare"
 	@echo "  make test-quick     - Fast smoke tests"
-	@echo ""
-	@echo "Generation Targets:"
-	@echo "  make generate-inputs   - Create test inputs"
-	@echo "  make generate-outputs  - Create expected outputs"
-	@echo "  make generate-tests    - Create all test files"
 	@echo ""
 	@echo "Usage Examples:"
 	@echo "  ./$(BINDIR)/$(DFT_TARGET) input/Input01.txt 8"
@@ -231,6 +201,4 @@ mrproper: distclean
 
 .PHONY: all both release debug clean distclean mrproper \
         test test-dft test-fft test-both test-quick \
-        check lint format docs help \
-        generate-inputs generate-outputs generate-tests \
-        directories dft1 fft1
+        help directories dft1 fft1
