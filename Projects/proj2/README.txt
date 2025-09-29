@@ -50,16 +50,29 @@ From dftoutput.txt - both implementations should produce identical results for N
 ```
 proj2/
 ├── src/                          # Source code files
-│   ├── dft1.cpp                 # DFT implementation
-│   └── fft1.cpp                 # FFT implementation
-├── include/                      # Header files
+│   ├── dft/                     # DFT implementation
+│   │   ├── dft1.h              # DFT class definition  
+│   │   ├── dft1.cpp            # DFT algorithm implementation
+│   │   └── main.cpp            # DFT main program
+│   └── fft/                     # FFT implementation
+│       ├── fft1.h              # FFT class definition
+│       ├── fft1.cpp            # Recursive FFT algorithm
+│       └── main.cpp            # FFT main program
 ├── bin/                         # Compiled executables
+│   ├── dft1                    # DFT program executable
+│   └── fft1                    # FFT program executable
 ├── obj/                         # Object files
+│   ├── dft/                    # DFT object files
+│   └── fft/                    # FFT object files
 ├── input/                       # Test input files
+│   ├── Input01.txt             # Test case 1 (8 complex numbers)
+│   └── Input02.txt             # Test case 2 (8 complex numbers)
 ├── output/                      # Expected output files
-├── tests/                       # Test suites
-├── docs/                        # Documentation
+│   ├── Output01.txt            # Expected results for test 1
+│   └── Output02.txt            # Expected results for test 2
+├── claudeLog/                   # AI collaboration session logs
 ├── Makefile                     # Build system
+├── dftoutput.txt               # Original assignment sample data
 └── README.txt                   # This file
 ```
 
@@ -67,22 +80,58 @@ proj2/
 
 ### Build Commands
 ```bash
-make                    # Build release version
-make debug             # Build with debug symbols
+make                    # Build both programs (release)
+make both              # Build both dft1 and fft1 
+make dft1              # Build DFT program only
+make fft1              # Build FFT program only
+make debug             # Debug build with symbols
 make clean             # Remove build artifacts
 make help              # Show all available targets
 ```
 
 ### Testing
 ```bash
-make test              # Run all tests
+make test              # Run comprehensive test comparison
+make test-dft          # Test DFT implementation only
+make test-fft          # Test FFT implementation only
+make test-both         # Test both programs and compare outputs
 make test-quick        # Run quick smoke tests
-make generate-tests    # Generate test files
 ```
 
-## Implementation Notes
+### Usage Examples
+```bash
+# Run DFT on test data
+./bin/dft1 input/Input01.txt 8
 
-*This section will be updated as development progresses*
+# Run FFT on same test data  
+./bin/fft1 input/Input01.txt 8
+
+# Both should produce identical output
+```
+
+## Implementation Status
+
+### ✅ DFT Implementation (Complete)
+- **Algorithm**: Basic O(N²) discrete Fourier transform
+- **Input parsing**: Handles complex number format (e.g., "1+2i", "-3-4i")
+- **Output formatting**: Dynamic precision (integers without decimals, 3 decimal places when needed)
+- **Testing**: Produces correct results matching expected outputs
+- **File**: `src/dft/dft1.cpp` (90 lines)
+
+### ✅ FFT Implementation (Complete)  
+- **Algorithm**: Recursive Cooley-Tukey FFT, O(N log N)
+- **Constraint**: Requires N = 2^m (power of 2)
+- **Base case**: N=1 returns input unchanged
+- **Recursive structure**: Divides into even/odd indices
+- **Twiddle factors**: Uses e^(-2πik/N) complex exponentials
+- **Testing**: Produces identical output to DFT implementation
+- **File**: `src/fft/fft1.cpp` (97 lines)
+
+### ✅ Build System (Complete)
+- **Separate executables**: Individual dft1 and fft1 programs
+- **Modular structure**: Each program in its own subdirectory
+- **Comprehensive testing**: Individual and comparative testing
+- **Clean architecture**: Follows genStandards conventions
 
 ## AI Disclosure
 
