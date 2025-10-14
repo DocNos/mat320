@@ -1,0 +1,252 @@
+# Math 320 Project III: Fast Fourier Transform - Specification Document
+
+## Project Overview
+Implement a non-recursive FFT algorithm using the Cooley-Tukey method with bit reversal, comparing performance against DFT and recursive FFT implementations.
+
+## Deliverables
+1. `bitrev.cpp` - Bit reversal program
+2. `fft2.cpp` - Non-recursive FFT implementation
+3. `timing.txt` - Performance comparison results
+4. Timing test code
+
+**Compilation**: Must compile with `g++` using standard headers only, no external dependencies.
+
+---
+
+## Part 1: Bit Reversal Algorithm (`bitrev.cpp`)
+
+### Input
+- Command line argument: positive integer N where N = 2^k
+
+### Output Format
+Each line contains: `i, b1, ir, b2`
+- `i`: integer from 0 to N-1
+- `b1`: binary representation of i
+- `ir`: integer value after bit reversal
+- `b2`: binary representation of ir
+
+### Example Output (N=8)
+```
+0, 000, 0, 000
+1, 001, 4, 100
+2, 010, 2, 010
+3, 011, 6, 110
+4, 100, 1, 001
+5, 101, 5, 101
+6, 110, 3, 011
+7, 111, 7, 111
+```
+
+### Required Functions
+
+#### `unsigned int bitReverse(unsigned int i, unsigned int numBits)`
+**Purpose**: Reverse the bits of integer i using exactly numBits bits
+
+**Algorithm**:
+- Start with reversed = 0 and MASK = N >> 1
+- For each bit position (from left to right):
+  - Check if current bit in i is set: `i & (1 << bit_position)`
+  - If set, set corresponding reversed bit: `reversed |= MASK`
+  - Shift MASK right: `MASK >>= 1`
+
+**Returns**: Bit-reversed integer
+
+#### `string toBinary(unsigned int n, unsigned int numBits)`
+**Purpose**: Convert integer to binary string representation
+
+**Returns**: Binary string with leading zeros to match numBits length
+
+#### `unsigned int getNumBits(unsigned int N)`
+**Purpose**: Calculate k where N = 2^k
+
+**Returns**: Number of bits needed
+
+#### `int main(int argc, char* argv[])`
+**Purpose**: Parse command line, validate N = 2^k, generate and print output
+
+---
+
+## Part 2: Non-Recursive FFT (`fft2.cpp`)
+
+### Input
+- Command line argument: N = 2^k (number of samples)
+- Text file: N lines, each containing a complex number (format: `real imag`)
+
+### Output
+- N complex numbers representing the DFT
+- Format: One per line as `real imag`
+
+### Required Functions
+
+#### `struct Complex`
+```cpp
+struct Complex {
+    double real;
+    double imag;
+    
+    Complex(double r = 0, double i = 0);
+    Complex operator+(const Complex& other);
+    Complex operator-(const Complex& other);
+    Complex operator*(const Complex& other);
+};
+```
+
+#### `vector<Complex> readComplexFile(const string& filename, int N)`
+**Purpose**: Read N complex numbers from input file
+
+**Returns**: Vector of Complex numbers
+
+#### `unsigned int bitReverse(unsigned int i, unsigned int numBits)`
+**Purpose**: Same as Part 1 - reverse bits for index reordering
+
+#### `vector<Complex> fftNonRecursive(vector<Complex>& data)`
+**Purpose**: Compute FFT using Cooley-Tukey algorithm with bit reversal
+
+**Algorithm**:
+1. **Bit Reversal Reordering**:
+   - Reorder input array by bit-reversed indices
+   - Swap elements: `data[i] ↔ data[bitReverse(i)]`
+
+2. **Iterative FFT (Cooley-Tukey)**:
+   - Outer loop: iterate over stages `s = 1 to log2(N)`
+     - `m = 2^s` (size of current DFT blocks)
+     - `w_m = exp(-2πi/m)` (principal mth root of unity)
+   - Middle loop: iterate over blocks of size m
+   - Inner loop: butterfly operations within each block
+     - For indices j and j+m/2:
+       - `t = w^k * data[j + m/2]`
+       - `u = data[j]`
+       - `data[j] = u + t`
+       - `data[j + m/2] = u - t`
+
+**Mathematical Foundation**:
+- Twiddle factor: `w = exp(-2πi * k / m)`
+- Butterfly operation merges two DFTs of size m/2
+
+**Returns**: Vector of Complex numbers (FFT result)
+
+#### `int main(int argc, char* argv[])`
+**Purpose**: Parse arguments, read input, compute FFT, write output
+
+---
+
+## Part 3: Timing Comparisons
+
+### Requirements
+- Test size: N = 1024
+- Algorithms to compare:
+  1. Direct DFT (O(N²))
+  2. Recursive FFT (from previous project)
+  3. Non-recursive FFT (this project)
+
+### Timing Code Structure
+
+#### `vector<Complex> dftDirect(const vector<Complex>& data)`
+**Purpose**: Naive DFT implementation for baseline
+
+**Algorithm**:
+```
+For k = 0 to N-1:
+    X[k] = sum(data[n] * exp(-2πi * k * n / N)) for n = 0 to N-1
+```
+
+#### `void runTimingTests()`
+**Purpose**: Execute all three algorithms with same input and measure time
+
+**Steps**:
+1. Generate test data (N=1024 complex numbers)
+2. Use `chrono::high_resolution_clock` for timing
+3. Run each algorithm 5-10 times and average
+4. Write results to `timing.txt`
+
+### Output Format (`timing.txt`)
+```
+Timing Comparison for N=1024
+=============================
+Direct DFT:          X.XXXXXX seconds
+Recursive FFT:       X.XXXXXX seconds
+Non-Recursive FFT:   X.XXXXXX seconds
+
+Speedup (FFT vs DFT): XX.XX x
+```
+
+---
+
+## Implementation Walkthrough
+
+### Step 1: Implement Bit Reversal (`bitrev.cpp`)
+1. Parse command line for N
+2. Validate N is power of 2
+3. Calculate number of bits: `k = log2(N)`
+4. Loop i from 0 to N-1:
+   - Compute bit reversal using bitwise operations
+   - Convert both i and reversed to binary strings
+   - Print formatted output
+
+**Key Bitwise Operations**:
+- `>>` : right shift
+- `&` : bitwise AND (check if bit is set)
+- `|=` : bitwise OR equals (set bit to 1)
+- `&= ~` : clear bit to 0
+- MASK pattern: starts at N>>1, shifts right each iteration
+
+### Step 2: Implement Non-Recursive FFT (`fft2.cpp`)
+1. Create Complex number class/struct
+2. Implement file reading for complex numbers
+3. Implement bit reversal function
+4. Implement non-recursive FFT:
+   - Reorder array by bit-reversed indices
+   - Outer loop over stages (1 to log2(N))
+   - Compute twiddle factors
+   - Inner loops for butterfly operations
+5. Main function: read input, compute FFT, write output
+
+### Step 3: Create Timing Framework
+1. Implement or reuse DFT direct method
+2. Implement or reuse recursive FFT
+3. Generate random test data (N=1024)
+4. Time each algorithm using high-resolution clock
+5. Calculate and report speedup factors
+6. Write results to `timing.txt`
+
+---
+
+## Testing Strategy
+
+### Validation Tests
+1. **Bit Reversal**: Test with N=8, 16 - verify manual calculations
+2. **FFT Correctness**: 
+   - Test with known input (e.g., impulse, sine wave)
+   - Compare output with DFT and recursive FFT
+   - Verify Parseval's theorem: energy conservation
+3. **Edge Cases**:
+   - N=2 (minimum case)
+   - All zeros input
+   - Real-only input
+
+### Performance Tests
+- Verify O(N log N) complexity scaling
+- Test with N = 256, 512, 1024, 2048
+- Compare actual vs theoretical speedup
+
+---
+
+## Common Pitfalls to Avoid
+
+1. **Bit Reversal**: Ensure you use exactly k bits (log2(N)), not the full integer width
+2. **Array Indexing**: After bit reversal, indices are scrambled - don't reuse original order assumptions
+3. **Complex Arithmetic**: Verify multiplication formula: `(a+bi)(c+di) = (ac-bd) + (ad+bc)i`
+4. **Twiddle Factors**: Use `-2π` in exponent for forward FFT
+5. **In-place Operation**: FFT can modify input array - make copy if needed
+6. **Floating Point**: Use sufficient precision in timing measurements
+
+---
+
+## Expected Complexity
+- **Direct DFT**: O(N²)
+- **Recursive FFT**: O(N log N) + recursion overhead
+- **Non-Recursive FFT**: O(N log N) with better cache locality
+
+**Expected Speedup for N=1024**:
+- FFT vs DFT: ~100x faster
+- Non-recursive vs Recursive: ~1.5-2x faster (less overhead)
