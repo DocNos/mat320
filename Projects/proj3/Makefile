@@ -27,9 +27,9 @@ TARGET_FFT2 = fft2
 TARGET_TIMING = timing_test
 
 # Source files
-BITREV_SOURCES = bitrev.cpp
-FFT2_SOURCES = fft2.cpp
-TIMING_SOURCES = timing_test.cpp
+BITREV_SOURCES = ./bitrev/bitrev.cpp
+FFT2_SOURCES = ./fft2/fft2.cpp
+TIMING_SOURCES = timing.cpp
 
 # Object files
 BITREV_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(BITREV_SOURCES))
