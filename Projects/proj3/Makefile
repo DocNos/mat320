@@ -27,12 +27,14 @@ TARGET_FFT2 = fft2
 TARGET_TIMING = timing_test
 
 # Source files
-BITREV_SOURCES = ./bitrev/bitrev.cpp
-FFT2_SOURCES = ./fft2/fft2.cpp
+BITREV_SOURCES = bitrev/bitrev.cpp
+BITREV_LIB_SOURCES = bitrev_lib.cpp
+FFT2_SOURCES = fft2/fft2.cpp
 TIMING_SOURCES = timing.cpp
 
 # Object files
 BITREV_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(BITREV_SOURCES))
+BITREV_LIB_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(BITREV_LIB_SOURCES))
 FFT2_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(FFT2_SOURCES))
 TIMING_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(TIMING_SOURCES))
 
@@ -54,9 +56,9 @@ build: all
 debug: CXXFLAGS += $(DEBUGFLAGS)
 debug: clean all
 
-# Compile object files
+# Compile object files (handles subdirectories)
 $(OBJDIR)/%.o: %.cpp
-	@mkdir -p $(OBJDIR)
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Link bitrev executable
@@ -64,8 +66,8 @@ $(BINDIR)/$(TARGET_BITREV): $(BITREV_OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Link fft2 executable
-$(BINDIR)/$(TARGET_FFT2): $(FFT2_OBJECTS)
+# Link fft2 executable (needs bitrev library functions)
+$(BINDIR)/$(TARGET_FFT2): $(FFT2_OBJECTS) $(BITREV_LIB_OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
