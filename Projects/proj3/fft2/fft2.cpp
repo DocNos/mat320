@@ -185,6 +185,41 @@ void DFT::Print()
     }
 }
 
+void Timing::test_dft(u_int size, c_vector vector)
+{
+    timePoint start = NowTime();
+    DFT dft(size, vector);    
+    dft.Execute();
+    timePoint end = NowTime();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    dft_Speed = duration.count() / 1000000.0;
+}
+
+void Timing::test_fftRec(c_vector input)
+{
+    timePoint start = NowTime();
+    FFT fourier("", input.size());
+    fourier.Execute(input);
+    timePoint end = NowTime();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    fftRecursive_Speed = duration.count() / 1000000.0;
+}
+
+void Timing::test_fftIP(c_vector input)
+{
+    timePoint start = NowTime();
+    FFT2 fourier(input.size(), "");
+    fourier.Execute();
+    timePoint end = NowTime();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    fftInPlace_Speed = duration.count() / 1000000.0;
+   
+}
+
+void Timing::TestPrint()
+{
+
+}
 
 int main(int argc, char* argv[]) {
     // Check command line arguments

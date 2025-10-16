@@ -153,9 +153,6 @@ public:
         // W_N^(k + N/2) = W_N^k * W_N^(N/2) = W_N^k * (-1) = -W_N^k
     c_vector Execute(c_vector input);
     void Print();
-
-
-
     string filename_;
     int size_;
     c_vector numbers_;
@@ -176,5 +173,26 @@ private:
     c_vector result_;
 
 };
+
+#include <chrono>
+using timePoint = std::chrono::_V2::system_clock::time_point;
+class Timing
+{
+public:
+    double dft_Speed = 0.0;
+    double fftRecursive_Speed = 0.0;
+    double fftInPlace_Speed = 0.0;
+
+public:
+    timePoint NowTime() { return std::chrono::high_resolution_clock::now();}
+    
+    void test_dft(u_int size, c_vector vector);
+    void test_fftRec(c_vector input);
+    void test_fftIP(c_vector input);
+
+    void TestPrint();
+
+};
+
 #endif // FFT2_H
 
