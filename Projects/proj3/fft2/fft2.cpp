@@ -101,6 +101,91 @@ void FFT2::Execute()
 
 }
 
+c_vector FFT::Execute(c_vector input)
+{
+    int N = static_cast<int>(input.size());
+    // std::cout << "FFT called with N=" << N << std::endl;
+    if(N == 1) {
+        // std::cout << "Base case: returning " << input[0] << std::endl;
+        return input;
+    }
+    
+    c_vector even, odd;
+    for(int i = 0; i < N; i+=2) {
+        even.push_back(input[i]);
+    }
+    for(int i = 1; i < N; i+=2) {        
+        odd.push_back(input[i]);
+    }       
+    c_vector evenRes = Execute(even);
+    c_vector oddRes = Execute(odd);
+            
+    c_vector result(N);
+    for(int k = 0; k < N/2; ++k) {       
+        double angle = -2.0 * M_PI * k / N;
+        complex twiddle(cos(angle), sin(angle));
+        complex t = twiddle * oddRes[k];
+        
+        result[k] = evenRes[k] + t;
+        result[k + N/2] = evenRes[k] - t;        
+        
+    }
+    return result;
+}
+
+void FFT::Read()
+{
+    string line;
+    std::ifstream file(filename_);
+    if(!file.is_open()){
+        std::cerr << "Error opening file " << filename_ << std::endl;
+        return;
+    }
+    while(std::getline(file, line))
+    {
+        complex num;
+        double real, imag;
+        char plus, i;
+        std::istringstream stream(line);
+        if(stream >> real >> plus >> imag >> i){
+            double imagFinal = (plus == '-') ? -imag : imag;
+            num = complex(real, imagFinal);
+            numbers_.emplace_back(num);
+            // std::cout << "Read from " << filename << " "
+            // << num << std::endl;
+        }
+    }
+
+}
+
+void FFT::Print()
+{
+    PrintFormattedVector(result_);
+}
+
+void DFT::Execute()
+{
+    for(int k = 0; k < (int)size_; ++k)
+    {
+        result_[k] = 0;
+        for(int n = 0; n < (int)size_; ++n)
+        {
+            double angle = -2.0 * M_PI * k * n / size_;
+            complex twiddle(cos(angle), sin(angle));
+            result_[k] += vec1_[n] * twiddle;
+        }
+    }
+}
+
+void DFT::Print()
+{
+    for(const auto& c : result_)
+    {
+        std::cout << c.real() << " " << c.imag() << std::endl;
+    }
+}
+
+
 int main(int argc, char* argv[]) {
     // Check command line arguments
     if (argc != 3) {

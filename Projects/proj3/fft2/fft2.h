@@ -137,10 +137,6 @@ public: // Bit reversal
 
 };
 
-#endif // FFT2_H
-
-/*
-
 class FFT
 {
 public:
@@ -166,38 +162,19 @@ public:
     c_vector result_;
 };
 
+class DFT
+{
+public:
+    DFT(u_int _size, c_vector _vec)
+    : size_(_size), vec1_(_vec) {}
 
- u_int N = data.size();
-    u_int numBits = getNumBits(N);    
-    for(u_int i = 0; i < N; ++i)
-    {
-        u_int reversed = bitReverse(i, numBits);
-        if(i < reversed) std::swap(data[i], data[reversed]);
-    }    
+    void Execute();
+    void Print();
+private:    
+    u_int size_;
+    c_vector vec1_;
+    c_vector result_;
 
-    for (u_int s = 1; s <= numBits; s++) 
-    { 
-        unsigned int m = 1 << s;
-        complex w_m = std::exp(complex(0, -2.0 * M_PI / m));
-    
-        for (unsigned int k = 0; k < N; k += m) 
-        {
-            complex w = 1.0;
+};
+#endif // FFT2_H
 
-            for (u_int j = 0; j < m/2; j++) 
-            { 
-                u_int upper = k + j;
-                u_int lower = k + j + m/2;
-
-                complex t = w * data[lower];
-                complex u = data[upper];
-                data[upper] = u + t;  // Upper branch: u + w*v
-                data[lower] = u - t;  // Lower branch: u - w*v
-                // Update twiddle factor: w = w * w_m
-                w = w * w_m;
-            }
-        }
-    }
-    return data;
-
-*/
