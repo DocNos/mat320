@@ -4,38 +4,6 @@
 #include <sstream>
 #include <cstdlib>
 
-c_vector Read(string filename, u_int num)
-{
-    string line;
-    std::ifstream file(filename);
-    c_vector numbers;
-
-    if(!file.is_open())
-    {
-        std::cerr << "Error opening file " << filename << std::endl;
-        return numbers;  
-    }
-
-    u_int count = 0;
-    while(count < num && std::getline(file, line))
-    {
-        // Skip comment lines (start with '#') and empty lines
-        if (line.empty()) continue;
-        
-        double real, imag;
-        std::istringstream stream(line);
-
-        if(stream >> real >> imag) 
-        {
-            complex num(real, imag);
-            numbers.emplace_back(num);
-            count++;
-        }
-    }
-
-    file.close();
-    return numbers;
-}
 
 void PrintFormattedVector(c_vector input)
 {
@@ -67,40 +35,70 @@ void PrintFormattedVector(c_vector input)
     }
 }
 
-c_vector fftNonRecursive(c_vector& data) 
+
+/* 
+    "Bottom up"
+    as opposed to recursive, which starts with full size, splitting
+    and performing the dft. 
+    Merge two half-sizes into one full size
+bit-reversing -> bit-reverse the indexes so that correct
+    indices are adjacent for the butterfly operation
+butterfly operation -> merges two dft's into a larger one. 
+    X[k] = E[k] + W_N^k * O[k]          (for k = 0 to N/2-1)
+    X[k+N/2] = E[k] - W_N^k * O[k]      (for k = 0 to N/2-1)
+    Where W_N^k = e^(-2πik/N) is the "twiddle factor" (Nth root of unity)
+        e^(-2πik/N) -> vector that has rotated k*n steps
+
+    W_N^(k+N/2) = W_N^k · W_N^(N/2) = W_N^k · (-1) = -W_N^k
+
+DFT checks correlation between a signal and a wave that completes
+k full rotations. 
+    Checking if the signal contains a particular frequency. 
+
+*/
+
+void FFT2::Execute() 
 {
-    u_int N = data.size();
-    u_int numBits = getNumBits(N);    
-    for(u_int i = 0; i < N; ++i)
+    // have already verifed is power of two and expected input size
+    // index swapping in-place with bit reversal
+    for(u_int i = 0; i < size_; ++i)
     {
-        u_int reversed = bitReverse(i, numBits);
-        if(i < reversed) std::swap(data[i], data[reversed]);
-    }    
-
-    for (u_int s = 1; s <= numBits; s++) 
-    { 
-        unsigned int m = 1 << s;
-        complex w_m = std::exp(complex(0, -2.0 * M_PI / m));
-    
-        for (unsigned int k = 0; k < N; k += m) 
+        u_int reversed = Reverse(i);
+        // only swap if lower index (crossover)
+        if(i < reversed) std::swap(numbers_[i], numbers_[reversed]);
+    }
+    // iterate through stages (log2(N) stages)
+    for(u_int stage = 1; stage <= countBits(size_); ++stage)
+    {
+        // 2^stage
+        u_int blockSize = 1 << stage; 
+        // "base case" root of unit
+        complex principle = 
+            std::exp(complex(0, -2.0 * M_PI / blockSize));
+        // iterate over current block
+        for(u_int blockIndex = 0; 
+            blockIndex < size_; 
+            blockIndex += blockSize)
         {
-            complex w = 1.0;
+            complex twiddle = 1.0;
+            // Butterfly operation - combine dft of adjacent indices
+            for(u_int i = 0; i < blockSize/2; ++i)
+            {
+                // Even index -> first in vector
+                u_int evenIndex = blockIndex + i;
+                u_int oddIndex = evenIndex + blockSize/2;
 
-            for (u_int j = 0; j < m/2; j++) 
-            { 
-                u_int upper = k + j;
-                u_int lower = k + j + m/2;
+                // Butterfly - mirrored operations
+                complex twiddleOdd = twiddle * numbers_[oddIndex];
+                complex even = numbers_[evenIndex];
+                numbers_[evenIndex] = even + twiddleOdd;
+                numbers_[oddIndex] = even - twiddleOdd;
 
-                complex t = w * data[lower];
-                complex u = data[upper];
-                data[upper] = u + t;  // Upper branch: u + w*v
-                data[lower] = u - t;  // Lower branch: u - w*v
-                // Update twiddle factor: w = w * w_m
-                w = w * w_m;
+                twiddle *= principle;
             }
         }
     }
-    return data;
+
 }
 
 int main(int argc, char* argv[]) {
@@ -111,24 +109,13 @@ int main(int argc, char* argv[]) {
         std::cerr << "  input_file: file containing N complex numbers (format: real imag per line)" << std::endl;
         return 1;
     }
+    u_int N = std::atoi(argv[1]);    
+    FFT2 fourier(N, argv[2]);
+    fourier.Read();    
+    if(fourier.Verify()) return 1;
 
-
-    int N = std::atoi(argv[1]);
-    if (!isPowerOfTwo(N)) 
-    {
-        std::cerr << "Error: N must be a positive power of 2" << std::endl;
-        return 1;
-    }
-    std::string filename = argv[2];
-    c_vector data = Read(filename, N);
-
-    if (data.size() != static_cast<size_t>(N)) 
-    {
-        std::cerr << "Error: Expected " << N << " complex numbers, got " << data.size() << std::endl;
-        return 1;
-    }
-    c_vector result = fftNonRecursive(data);
-    for (const auto& c : result) 
+    fourier.Execute();
+    for (const auto& c : fourier.numbers_) 
     {
         std::cout << c.real() << " " << c.imag() << std::endl;
     }

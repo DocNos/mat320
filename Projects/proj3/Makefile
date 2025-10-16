@@ -18,7 +18,7 @@ SCRIPTDIR = scripts
 
 # Build configuration
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -O2
+CXXFLAGS = -Wall -Wextra -std=c++17 -O2 -I.
 DEBUGFLAGS = -g -O0 -DDEBUG
 
 # Primary targets
@@ -66,8 +66,8 @@ $(BINDIR)/$(TARGET_BITREV): $(BITREV_OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Link fft2 executable (needs bitrev library functions)
-$(BINDIR)/$(TARGET_FFT2): $(FFT2_OBJECTS) $(BITREV_LIB_OBJECTS)
+# Link fft2 executable (self-contained, no bitrev library needed)
+$(BINDIR)/$(TARGET_FFT2): $(FFT2_OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
