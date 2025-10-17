@@ -209,15 +209,15 @@ void Timing::test_fftIP(const c_vector input)
 {
     timePoint start = NowTime();
     FFT2 fourier(input.size(), "");
+    fourier.numbers_ = input;  // Copy the input data
     fourier.Execute();
     timePoint end = NowTime();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     fftInPlace_Speed = duration.count() / 1000000.0;
-   
 }
 
 void Timing::TestPrint()
-{    
+{
     u_int N = 1024;
     std::ofstream outfile("timing.txt");
     if(!outfile.is_open())
@@ -225,7 +225,7 @@ void Timing::TestPrint()
         std::cerr << "Could not open output file";
         return;
     }
-    outfile << printf("Timing Comparison for N=%d\n", N);
+    outfile << "Timing Comparison for N=" << N << "\n";
     outfile << "=============================\n";
     outfile << std::fixed << std::setprecision(6);
     outfile << "Direct DFT:          " << dft_Speed << " seconds\n";
@@ -237,36 +237,63 @@ void Timing::TestPrint()
 
     outfile << "Speedups:\n";
     outfile << "=============================\n";
-    outfile << printf("Recursive Fast Fourier Transform is %d'%' faster than a direct DFT\n", speedup0);
-    outfile << printf("In place FFT with leveraging bit shifting is %d'%' faster than the Recusive FFT", speedup1 );
+    outfile << "Recursive Fast Fourier Transform is " << std::setprecision(2) << speedup0 << "% faster than a direct DFT\n";
+    outfile << "In place FFT with leveraging bit shifting is " << std::setprecision(2) << speedup1 << "% faster than the Recusive FFT\n";
 
     outfile.close();
 }
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
-    // Check command line arguments
+    // TIMING MODE: ./bin/fft2 --timing
+    if (argc == 2 && string(argv[1]) == "--timing") {
+        std::cout << "Running timing tests with N=1024..." << std::endl;
+
+        Timing timer("input/random_1024.txt");
+
+        if (timer.vector_.size() != 1024) {
+            std::cerr << "Error: Expected 1024 samples, got " << timer.vector_.size() << std::endl;
+            std::cerr << "Make sure input/random_1024.txt exists with 1024 complex numbers" << std::endl;
+            return 1;
+        }
+
+        c_vector vec = timer.vector_;
+
+        std::cout << "Testing DFT (this may take a while)..." << std::endl;
+        timer.test_dft(vec.size(), vec);
+        std::cout << "  DFT complete: " << timer.dft_Speed << " seconds" << std::endl;
+
+        std::cout << "Testing Recursive FFT..." << std::endl;
+        timer.test_fftRec(vec);
+        std::cout << "  Recursive FFT complete: " << timer.fftRecursive_Speed << " seconds" << std::endl;
+
+        std::cout << "Testing Non-Recursive FFT..." << std::endl;
+        timer.test_fftIP(vec);
+        std::cout << "  Non-Recursive FFT complete: " << timer.fftInPlace_Speed << " seconds" << std::endl;
+
+        std::cout << "\nWriting results to timing.txt..." << std::endl;
+        timer.TestPrint();
+        std::cout << "Done!" << std::endl;
+
+        return 0;
+    }
+
+    // FFT MODE: ./bin/fft2 <N> <input_file>
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " <N> <input_file>" << std::endl;
+        std::cerr << "       " << argv[0] << " --timing" << std::endl;
         std::cerr << "  N: number of samples (must be power of 2)" << std::endl;
         std::cerr << "  input_file: file containing N complex numbers (format: real imag per line)" << std::endl;
         return 1;
     }
+
     u_int N = std::atoi(argv[1]);
-    Timing timer(argv[2]);
-    c_vector vec = timer.vector_;
-    timer.test_dft(vec.size(), vec);
-    timer.test_fftRec(vec);
-    timer.test_fftIP(vec);
-    timer.TestPrint();
-
-
     FFT2 fourier(N, argv[2]);
-    fourier.Read();    
+    fourier.Read();
     if(fourier.Verify()) return 1;
 
     fourier.Execute();
-    for (const auto& c : fourier.numbers_) 
+    for (const auto& c : fourier.numbers_)
     {
         std::cout << c.real() << " " << c.imag() << std::endl;
     }

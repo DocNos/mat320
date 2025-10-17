@@ -163,7 +163,10 @@ class DFT
 {
 public:
     DFT(u_int _size, c_vector _vec)
-    : size_(_size), vec1_(_vec) {}
+    : size_(_size), vec1_(_vec)
+    {
+        result_ = c_vector(size_, 0);
+    }
 
     void Execute();
     void Print();
@@ -188,6 +191,7 @@ public:
     Timing(string filename)
     {
         Read(filename);
+        
     }
     timePoint NowTime() { return std::chrono::high_resolution_clock::now();}
     

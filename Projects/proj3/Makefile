@@ -24,19 +24,16 @@ DEBUGFLAGS = -g -O0 -DDEBUG
 # Primary targets
 TARGET_BITREV = bitrev
 TARGET_FFT2 = fft2
-TARGET_TIMING = timing_test
 
 # Source files
 BITREV_SOURCES = bitrev/bitrev.cpp
 BITREV_LIB_SOURCES = bitrev_lib.cpp
 FFT2_SOURCES = fft2/fft2.cpp
-TIMING_SOURCES = timing.cpp
 
 # Object files
 BITREV_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(BITREV_SOURCES))
 BITREV_LIB_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(BITREV_LIB_SOURCES))
 FFT2_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(FFT2_SOURCES))
-TIMING_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(TIMING_SOURCES))
 
 ################################################################################
 # BUILD RULES
@@ -47,7 +44,7 @@ TIMING_OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(TIMING_SOURCES))
         verify verify-bitrev verify-fft check docs
 
 # Default target - build all executables
-all: $(BINDIR)/$(TARGET_BITREV) $(BINDIR)/$(TARGET_FFT2) $(BINDIR)/$(TARGET_TIMING)
+all: $(BINDIR)/$(TARGET_BITREV) $(BINDIR)/$(TARGET_FFT2)
 
 # Alternative name for all
 build: all
@@ -71,10 +68,6 @@ $(BINDIR)/$(TARGET_FFT2): $(FFT2_OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Link timing test executable
-$(BINDIR)/$(TARGET_TIMING): $(TIMING_OBJECTS)
-	@mkdir -p $(BINDIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^
 
 ################################################################################
 # TEST TARGETS
@@ -101,12 +94,16 @@ test-fft2: $(BINDIR)/$(TARGET_FFT2)
 		echo "No input file found. Run 'make generate-inputs' first."; \
 	fi
 
-# Run timing comparisons
-test-timing: $(BINDIR)/$(TARGET_TIMING)
-	@echo "Running timing tests (N=1024)..."
-	@./$(BINDIR)/$(TARGET_TIMING) > timing.txt
-	@echo "Results written to timing.txt"
-	@cat timing.txt
+# Run timing comparisons (timing functionality is now part of fft2)
+test-timing: $(BINDIR)/$(TARGET_FFT2)
+	@echo "Running timing tests with N=1024..."
+	@if [ -f $(INPUTDIR)/random_1024.txt ]; then \
+		./$(BINDIR)/$(TARGET_FFT2) --timing; \
+	else \
+		echo "Error: $(INPUTDIR)/random_1024.txt not found."; \
+		echo "Please create an input file with 1024 complex numbers."; \
+		exit 1; \
+	fi
 
 ################################################################################
 # GENERATION TARGETS
@@ -156,7 +153,6 @@ check: all
 	@echo "Checking that executables exist and are executable..."
 	@test -x $(BINDIR)/$(TARGET_BITREV) && echo "✓ bitrev executable OK" || echo "✗ bitrev missing"
 	@test -x $(BINDIR)/$(TARGET_FFT2) && echo "✓ fft2 executable OK" || echo "✗ fft2 missing"
-	@test -x $(BINDIR)/$(TARGET_TIMING) && echo "✓ timing_test executable OK" || echo "✗ timing_test missing"
 
 ################################################################################
 # CLEANUP TARGETS
@@ -166,7 +162,7 @@ check: all
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf $(OBJDIR)/*.o
-	@rm -rf $(BINDIR)/$(TARGET_BITREV) $(BINDIR)/$(TARGET_FFT2) $(BINDIR)/$(TARGET_TIMING)
+	@rm -rf $(BINDIR)/$(TARGET_BITREV) $(BINDIR)/$(TARGET_FFT2)
 	@echo "Clean complete."
 
 # Full cleanup including generated files

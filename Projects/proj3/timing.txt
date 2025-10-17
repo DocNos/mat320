@@ -1,0 +1,10 @@
+Timing Comparison for N=1024
+=============================
+Direct DFT:          0.027937 seconds
+Recursive FFT:       0.000300 seconds
+Non-Recursive FFT:   0.000096 seconds
+
+Speedups:
+=============================
+Recursive Fast Fourier Transform is 9312.33% faster than a direct DFT
+In place FFT with leveraging bit shifting is 312.50% faster than the Recusive FFT
