@@ -182,15 +182,44 @@ public:
     double dft_Speed = 0.0;
     double fftRecursive_Speed = 0.0;
     double fftInPlace_Speed = 0.0;
+    c_vector vector_;
 
 public:
+    Timing(string filename)
+    {
+        Read(filename);
+    }
     timePoint NowTime() { return std::chrono::high_resolution_clock::now();}
     
-    void test_dft(u_int size, c_vector vector);
-    void test_fftRec(c_vector input);
-    void test_fftIP(c_vector input);
-
+    void test_dft(u_int size, const c_vector vector);
+    void test_fftRec(const c_vector input);
+    void test_fftIP(const c_vector input);
     void TestPrint();
+
+    void Read(string filename)
+    {
+        string line;
+        std::ifstream file(filename);
+        if(!file.is_open())
+        {
+            std::cerr << "Error opening file " << filename << std::endl;
+            return;  
+        }
+        while(std::getline(file, line))
+        {
+            if (line.empty()) continue;        
+            double real, imag;
+            std::istringstream stream(line);
+            // confirm input is in complex form (double, double)
+            if(stream >> real >> imag) 
+            {
+                complex num(real, imag);
+                vector_.emplace_back(num);
+            }
+        }
+        file.close();
+    }
+    
 
 };
 

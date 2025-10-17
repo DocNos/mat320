@@ -185,7 +185,7 @@ void DFT::Print()
     }
 }
 
-void Timing::test_dft(u_int size, c_vector vector)
+void Timing::test_dft(u_int size, const c_vector vector)
 {
     timePoint start = NowTime();
     DFT dft(size, vector);    
@@ -195,7 +195,7 @@ void Timing::test_dft(u_int size, c_vector vector)
     dft_Speed = duration.count() / 1000000.0;
 }
 
-void Timing::test_fftRec(c_vector input)
+void Timing::test_fftRec(const c_vector input)
 {
     timePoint start = NowTime();
     FFT fourier("", input.size());
@@ -205,7 +205,7 @@ void Timing::test_fftRec(c_vector input)
     fftRecursive_Speed = duration.count() / 1000000.0;
 }
 
-void Timing::test_fftIP(c_vector input)
+void Timing::test_fftIP(const c_vector input)
 {
     timePoint start = NowTime();
     FFT2 fourier(input.size(), "");
@@ -217,11 +217,34 @@ void Timing::test_fftIP(c_vector input)
 }
 
 void Timing::TestPrint()
-{
+{    
+    u_int N = 1024;
+    std::ofstream outfile("timing.txt");
+    if(!outfile.is_open())
+    {
+        std::cerr << "Could not open output file";
+        return;
+    }
+    outfile << printf("Timing Comparison for N=%d\n", N);
+    outfile << "=============================\n";
+    outfile << std::fixed << std::setprecision(6);
+    outfile << "Direct DFT:          " << dft_Speed << " seconds\n";
+    outfile << "Recursive FFT:       " << fftRecursive_Speed << " seconds\n";
+    outfile << "Non-Recursive FFT:   " << fftInPlace_Speed << " seconds\n";
+    outfile << "\n";
+    double speedup0 = 100*(dft_Speed / fftRecursive_Speed);
+    double speedup1 = 100*(fftRecursive_Speed / fftInPlace_Speed);
 
+    outfile << "Speedups:\n";
+    outfile << "=============================\n";
+    outfile << printf("Recursive Fast Fourier Transform is %d'%' faster than a direct DFT\n", speedup0);
+    outfile << printf("In place FFT with leveraging bit shifting is %d'%' faster than the Recusive FFT", speedup1 );
+
+    outfile.close();
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
     // Check command line arguments
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " <N> <input_file>" << std::endl;
@@ -229,7 +252,15 @@ int main(int argc, char* argv[]) {
         std::cerr << "  input_file: file containing N complex numbers (format: real imag per line)" << std::endl;
         return 1;
     }
-    u_int N = std::atoi(argv[1]);    
+    u_int N = std::atoi(argv[1]);
+    Timing timer(argv[2]);
+    c_vector vec = timer.vector_;
+    timer.test_dft(vec.size(), vec);
+    timer.test_fftRec(vec);
+    timer.test_fftIP(vec);
+    timer.TestPrint();
+
+
     FFT2 fourier(N, argv[2]);
     fourier.Read();    
     if(fourier.Verify()) return 1;
