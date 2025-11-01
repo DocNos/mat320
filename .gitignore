@@ -12,8 +12,7 @@
 *.i*86
 *.x86_64
 *.hex
-bitrev
-fft2
+
 
 
 # Visual Studio / Visual Studio Code
