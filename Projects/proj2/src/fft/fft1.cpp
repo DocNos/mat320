@@ -33,8 +33,6 @@ CVector FFT::Execute(CVector input)
         
     }
     return result;
-
-
 }
 
 void FFT::Read()
