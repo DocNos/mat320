@@ -7,23 +7,37 @@
 #include <iostream>
 using namespace std;
 
-void Lowpass::ConvertWave()
+short* Lowpass::FilterEq()
+{
+    short* input = reinterpret_cast<short*>(wavData_);
+    filtered_[0] = input[0];
+    for(int i = 1; i < N_; ++i)
+    {
+        filtered_[i] = input[i] + 
+            static_cast<short>(coefficent_ * input[i-1]);
+    }
+    return filtered_;
+}
+
+// Normalize Hz value to -1.5dB
+// 
+short Lowpass::Normalize(short rawInput)
+{
+    
+
+
+}
+
+short* Lowpass::ConvertWave()
 {
     // convert to WAVE file
     float const norm = 2.0f/float(N_),
               MAX = float((1<<15)-1);
-    short *samples = reinterpret_cast<short*>(wavData_);
+    short* samples = FilterEq();
+    //short *samples = reinterpret_cast<short*>(wavData_);
     for (unsigned i=0; i < count_; ++i) 
-    {
-      // int k = 0.5f*(2*i - N_)/H,
-      //     kp1 = k + 1;
-      // if (k < 0)
-      //   k = kp1 = 0;
-      // if (kp1 >= int(wcount))
-      //   k = kp1 = int(wcount) - 1;
-      // float x = (i - 0.5f*N)/H - k,
-      //       y = norm*(coef[k] + (coef[kp1] - coef[k])*x);
-      samples[i] = short(min(MAX,abs(y)));
+    {      
+        samples[i] = Normalize(samples[i]);
     }
 }
 
@@ -76,7 +90,8 @@ int main(int argc, char* argv[])
         cout << "Not enough iterations" << endl;
         return 0;
     }
-    Lowpass lowpass(coeff, N, wav);
-
+    Lowpass lowpass = Lowpass(coeff, N, wav);
+    lowpass.FilterEq();
+    
     return 1;
 }

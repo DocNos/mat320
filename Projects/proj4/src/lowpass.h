@@ -4,6 +4,7 @@ class Lowpass
 {
 public:
     char* wavData_; 
+    short* filtered_;
     char header_[44];   
     float coefficent_;
     int N_;
@@ -18,13 +19,19 @@ public:
     : coefficent_(_coefficent), N_(_N)
     {
         ReadWav(wav);
+        filtered_ = new short[N_];
     }
     ~Lowpass()
     {
         delete[] wavData_;
+        delete[] filtered_;
     }
 
+    // y[t] = x[t] + a1 * x[t-1]
+    short* FilterEq();
+    short Normalize(short rawInput);
     
+    short* ConvertWave();
     char* ReadWav(string _file);
     void WriteOut();
 };
