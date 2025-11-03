@@ -66,7 +66,7 @@ release: clean all
 test: all
 	@echo "Running test with transrights.wav..."
 	@echo "Command: ./$(BINDIR)/$(TARGET) 0.02 100 transrights.wav"
-	./$(BINDIR)/$(TARGET) 0.02 100 transrights.wav
+	./$(BINDIR)/$(TARGET) 0.02 10 transrights.wav
 	@echo ""
 	@echo "Output written to output.wav"
 	@if [ -f output.wav ]; then \
@@ -75,6 +75,14 @@ test: all
 	else \
 		echo "✗ output.wav not found"; \
 	fi
+
+valgrind: debug
+	@echo "Running valgrind memory check..."
+	@echo "Command: valgrind --leak-check=full ./$(BINDIR)/$(TARGET) 0.02 10 transrights.wav"
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+		./$(BINDIR)/$(TARGET) 0.02 10 transrights.wav
+	@echo ""
+	@echo "Check output above for memory leaks and errors"
 
 ################################################################################
 # CLEANUP
@@ -103,11 +111,12 @@ help:
 	@echo ""
 	@echo "Test Targets:"
 	@echo "  make test           - Run all tests"
+	@echo "  make valgrind       - Run valgrind memory check"
 	@echo ""
 	@echo "Usage:"
 	@echo "  ./$(BINDIR)/$(TARGET) <a1> <n> <input.wav>"
 	@echo ""
 	@echo "Example:"
-	@echo "  ./$(BINDIR)/$(TARGET) 0.99 100 input/test.wav"
+	@echo "  ./$(BINDIR)/$(TARGET) 0.02 100 input/test.wav"
 
-.PHONY: all debug release test clean distclean help
+.PHONY: all debug release test valgrind clean distclean help

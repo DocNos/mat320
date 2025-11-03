@@ -3,7 +3,7 @@
 #include <fstream>
 #include <complex>
 #include <cstdlib>
-#include <cmath>
+
 #include <iostream>
 #include <climits>
 using namespace std;
@@ -16,6 +16,7 @@ void Lowpass::FilterEq()
     filtered_[0] = input[0];
     for(unsigned i = 1; i < count_; ++i)
     {
+        //cout << input[i] << endl;
         filtered_[i] = static_cast<short>(
             input[i] + coefficent_ * input[i-1]);
     }
@@ -35,22 +36,27 @@ void Lowpass::FilterEq()
 // 
 void Lowpass::Normalize(float targetDB)
 {
-    float maxSample = 0.f;
+    float maxSample = 0.f, minSample = 0.f;
     for(unsigned i = 0; i < count_; ++i)
     {
         auto abs = fabs(static_cast<float>(filtered_[i]));
+        minSample = (filtered_[i] < minSample) ? abs : minSample;
         maxSample = (abs > maxSample) ? abs : maxSample; 
     }
     unsigned maxInt = pow(2, 15);
-    // db = 20 * log10(hz value / sampleRef)
-    // 10^(db/20) * sampleRef = hz value
+    // db = 20 * log10(p2 / p1) -> increase in loudness from p1 to p2
+    // p2: max hz | p1: max int
+    // 10^(db/20) * sampleRef (p1) = hz value (p2)
     float maxHz = pow(10, targetDB / 20) * maxInt;
     float normal = maxHz / maxSample;
+    float maxSample_db = toDb(maxSample, minSample);
+    cout << toDb(maxInt, maxHz)<< " " <<  maxSample_db << " " <<normal << endl;
     for(unsigned i = 0; i < count_; ++i)
     {
         filtered_[i] = static_cast<short>(
             filtered_[i] * normal
         );
+        //cout << filtered_[i] << endl;
     }
 }
 
@@ -111,7 +117,8 @@ int main(int argc, char* argv[])
     }
     Lowpass lowpass = Lowpass(coeff, iterations, wav);
     lowpass.FilterEq();
-    lowpass.Normalize(-1.5);
+    //lowpass.Normalize(-1.5);
+    // cout << lowpass;
     lowpass.WriteOut();
 
     return 0;
