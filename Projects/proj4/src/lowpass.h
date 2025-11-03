@@ -2,11 +2,20 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <fstream>
+#include <complex>
+#include <cstdlib>
+
+#include <iostream>
+#include <climits>
+using namespace std;
 using string = std::string;
 using std::ostream;
 using std::cout;
 using std::endl;
 using std::vector;
+
+
 
 class Lowpass
 {
@@ -14,6 +23,8 @@ public:
     // wavData should be float?
     char* wavData_; 
     short* filtered_;
+    vector<short> normalizedInput_;
+
     char header_[44];   
     float coefficent_;
     int iterations_;
@@ -22,12 +33,15 @@ public:
     unsigned rate_;
     unsigned count_;
 
+    unsigned _MAX16_ = 32767;
+
 
 public:
     Lowpass(float _coefficent, int _N, char* wav)
     : coefficent_(_coefficent), iterations_(_N)
     {
         ReadWav(wav);
+        Normalize_Signal(normalizedInput_, -1.5);
         // filtered should be length of samples
         filtered_ = new short[count_];
     }
@@ -64,16 +78,52 @@ public:
         }
         return os;
     }
-    float toDb(float p1, float p2)
+    float toDb(float p2)
     {
-        return 20.f * log10(p2/p1);
+        return 20.f * log10(fabs(p2)/_MAX16_);
     }
     float fromDb(float db, float p1)
     {
         return pow(10, db / 20) * p1;
     }
     // y[t] = x[t] + a1 * x[t-1]
+
     void FilterEq();
+    /*
+    Reference = 32767 (max 16-bit): 
+        "how far below the maximum possible value is this sample?" 
+        dBFS (decibels relative to Full Scale). 
+        A sample at maximum would be 0 dBFS, and everything else is negative.
+    Reference = maximum sample in the file: 
+        "how far below the loudest sample is this sample?" 
+        The loudest sample would be 0 dB, everything else negative.
+    */
+    vector<short> Normalize_Signal(vector<short> input, float db)
+    {
+        fstream out1("./out/sampleInput", ios::out);
+        float max = 0.f;
+        for(auto sample : input)
+        {       
+            out1 << sample << endl;
+            float abs = fabs(sample);   
+            max = (abs > max) ? (abs) : max;            
+        }
+        float normalFactor = (_MAX16_ * pow(10, (db/20)) ) / max;
+        cout << "Max sample val: " << max << " Normalize Factor: " << normalFactor << endl;
+        fstream out("./out/normalizedInput.txt", ios::out);
+        fstream out2("./out/normalizedInput_db.txt", ios::out);
+        for(auto sample: input)
+        {
+            out << sample * normalFactor << endl;
+            out2 << toDb(sample * normalFactor) << endl;
+        }
+        short* samples = reinterpret_cast<short*>(wavData_);
+        for(unsigned i = 0; i < count_; ++i)
+        {
+            samples[i] = normalizedInput_[i];
+        }
+            return input;
+    }
     void Normalize(float);
 
     void ReadWav(string _file);

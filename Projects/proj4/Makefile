@@ -66,7 +66,7 @@ release: clean all
 test: all
 	@echo "Running test with transrights.wav..."
 	@echo "Command: ./$(BINDIR)/$(TARGET) 0.02 100 transrights.wav"
-	./$(BINDIR)/$(TARGET) 0.02 10 transrights.wav
+	./$(BINDIR)/$(TARGET) 0.2 100 transrights.wav
 	@echo ""
 	@echo "Output written to output.wav"
 	@if [ -f output.wav ]; then \
@@ -89,7 +89,7 @@ valgrind: debug
 ################################################################################
 
 clean:
-	rm -rf $(OBJDIR)/*.o $(BINDIR)/$(TARGET) output.wav
+	rm -rf $(OBJDIR)/*.o $(BINDIR)/$(TARGET) output.wav ./out/*
 
 distclean: clean
 	rm -rf $(BINDIR) $(OBJDIR)

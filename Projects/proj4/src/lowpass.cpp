@@ -1,12 +1,7 @@
 #include "lowpass.h"
 // #include <algorithm>
-#include <fstream>
-#include <complex>
-#include <cstdlib>
 
-#include <iostream>
-#include <climits>
-using namespace std;
+
 
 void Lowpass::FilterEq()
 {
@@ -49,8 +44,8 @@ void Lowpass::Normalize(float targetDB)
     // 10^(db/20) * sampleRef (p1) = hz value (p2)
     float maxHz = pow(10, targetDB / 20) * maxInt;
     float normal = maxHz / maxSample;
-    float maxSample_db = toDb(maxSample, minSample);
-    cout << toDb(maxInt, maxHz)<< " " <<  maxSample_db << " " <<normal << endl;
+    //float maxSample_db = toDb(maxSample, minSample);
+    //cout << toDb(maxInt, maxHz)<< " " <<  maxSample_db << " " <<normal << endl;
     for(unsigned i = 0; i < count_; ++i)
     {
         filtered_[i] = static_cast<short>(
@@ -75,6 +70,13 @@ void Lowpass::ReadWav(string wavFile)
     count_ = size_/2;
     wavData_ = new char[size_];
     in.read(wavData_,size_);
+
+    short* samples = reinterpret_cast<short*>(wavData_);
+    for(unsigned i = 0; i < count_; ++i)
+    {
+        
+        normalizedInput_.push_back(samples[i]);
+    }
 
     cout << "The sample rate is:  " << rate_ << endl;
     cout << "The data size is:  " << size_ << endl;
