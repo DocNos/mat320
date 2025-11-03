@@ -22,8 +22,8 @@ class Lowpass
 public:
     // wavData should be float?
     char* wavData_; 
-    short* filtered_;
-    vector<short> normalizedInput_;
+    float* filtered_;
+    vector<float> normalizedInput_;
 
     char header_[44];   
     float coefficent_;
@@ -43,7 +43,7 @@ public:
         ReadWav(wav);
         Normalize_Signal(normalizedInput_, -1.5);
         // filtered should be length of samples
-        filtered_ = new short[count_];
+        filtered_ = new float[count_];
     }
     ~Lowpass()
     {
@@ -98,31 +98,24 @@ public:
         "how far below the loudest sample is this sample?" 
         The loudest sample would be 0 dB, everything else negative.
     */
-    vector<short> Normalize_Signal(vector<short> input, float db)
+    void Normalize_Signal(vector<float>& input, float db)
     {
-        fstream out1("./out/sampleInput", ios::out);
+        fstream out1("./out/sampleInput.txt", ios::out);
         float max = 0.f;
         for(auto sample : input)
-        {       
-            out1 << sample << endl;
-            float abs = fabs(sample);   
-            max = (abs > max) ? (abs) : max;            
-        }
-        float normalFactor = (_MAX16_ * pow(10, (db/20)) ) / max;
-        cout << "Max sample val: " << max << " Normalize Factor: " << normalFactor << endl;
-        fstream out("./out/normalizedInput.txt", ios::out);
-        fstream out2("./out/normalizedInput_db.txt", ios::out);
-        for(auto sample: input)
         {
-            out << sample * normalFactor << endl;
-            out2 << toDb(sample * normalFactor) << endl;
+            out1 << sample << endl;
+            float abs = fabs(sample);
+            max = (abs > max) ? (abs) : max;
         }
-        short* samples = reinterpret_cast<short*>(wavData_);
+        float normalFactor = 1.5 / max;
+
+        fstream out2("./out/normalizedInput.txt", ios::out);
         for(unsigned i = 0; i < count_; ++i)
         {
-            samples[i] = normalizedInput_[i];
+            input[i] = input[i] * normalFactor;
+            out2 << input[i] << endl;
         }
-            return input;
     }
     void Normalize(float);
 
@@ -132,6 +125,15 @@ public:
     
 };
 
+
+//cout << "Max sample val: " << max << " Normalize Factor: " << normalFactor << endl;
+        //fstream out("./out/normalizedInput.txt", ios::out);
+        //fstream out2("./out/normalizedInput_db.txt", ios::out);
+        // for(auto sample: input)
+        // {
+        //     out << sample * normalFactor << endl;
+        //     out2 << toDb(sample * normalFactor) << endl;
+        // }
 
 /*
     Filter coefficent a1
