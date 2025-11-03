@@ -81,7 +81,7 @@ test: all
 ################################################################################
 
 clean:
-	rm -rf $(OBJDIR)/*.o $(BINDIR)/$(TARGET)
+	rm -rf $(OBJDIR)/*.o $(BINDIR)/$(TARGET) output.wav
 
 distclean: clean
 	rm -rf $(BINDIR) $(OBJDIR)
