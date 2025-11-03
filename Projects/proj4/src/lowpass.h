@@ -32,7 +32,6 @@ public:
     void FilterEq();
     void Normalize(float);
     
-    void ConvertWave();
     void ReadWav(string _file);
     void WriteOut();
 };

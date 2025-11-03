@@ -26,7 +26,7 @@ OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
 
 # Build Tools
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -I$(INCDIR)
+CXXFLAGS = -Wall -Wextra -std=c++17 -I$(INCDIR) -I$(SRCDIR)
 LDFLAGS = -lm
 
 # Build Mode Flags
@@ -64,8 +64,17 @@ release: clean all
 ################################################################################
 
 test: all
-	@echo "Running tests..."
-	@echo "TODO: Add test cases"
+	@echo "Running test with transrights.wav..."
+	@echo "Command: ./$(BINDIR)/$(TARGET) 0.99 100 transrights.wav"
+	./$(BINDIR)/$(TARGET) 0.99 100 transrights.wav
+	@echo ""
+	@echo "Output written to output.wav"
+	@if [ -f output.wav ]; then \
+		echo "✓ output.wav created successfully"; \
+		file output.wav; \
+	else \
+		echo "✗ output.wav not found"; \
+	fi
 
 ################################################################################
 # CLEANUP

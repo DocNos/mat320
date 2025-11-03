@@ -11,16 +11,24 @@ using namespace std;
 void Lowpass::FilterEq()
 {
     short* input = reinterpret_cast<short*>(wavData_);
-    for(int j = 0; j < iterations_; ++j)
+
+    // First iteration: input -> filtered
+    filtered_[0] = input[0];
+    for(unsigned i = 1; i < count_; ++i)
     {
-        filtered_[0] = input[0];
-        for(int i = 1; i < count_; ++i)
+        filtered_[i] = static_cast<short>(
+            input[i] + coefficent_ * input[i-1]);
+    }
+
+    for(int j = 1; j < iterations_; ++j)
+    {
+        filtered_[0] = filtered_[0]; 
+        for(unsigned i = 1; i < count_; ++i)
         {
             filtered_[i] = static_cast<short>(
-                input[i] + coefficent_ * input[i-1]);
+                filtered_[i] + coefficent_ * filtered_[i-1]);
         }
     }
-    
 }
 
 // Normalize Hz value to -1.5dB
@@ -46,17 +54,6 @@ void Lowpass::Normalize(float targetDB)
     }
 }
 
-void Lowpass::ConvertWave()
-{
-    // convert to WAVE file
-    float const norm = 2.0f/float(iterations_),
-              MAX = float((1<<15)-1);
-    for (unsigned i=0; i < count_; ++i) 
-    {      
-        //filtered_[i] = Normalize(samples[i]);
-    }
-}
-
 void Lowpass::ReadWav(string wavFile)
 {
     fstream in(wavFile, ios_base::binary|ios_base::in);
@@ -79,6 +76,12 @@ void Lowpass::ReadWav(string wavFile)
 
 void Lowpass::WriteOut()
 {
+    short* samples = reinterpret_cast<short*>(wavData_);
+    for(unsigned i = 0; i < count_; ++i)
+    {
+        samples[i] = filtered_[i];
+    }
+
     fstream out("output.wav",ios_base::binary|ios_base::out);
     out.write(header_, 44);
     out.write(wavData_, size_);
@@ -109,6 +112,7 @@ int main(int argc, char* argv[])
     Lowpass lowpass = Lowpass(coeff, iterations, wav);
     lowpass.FilterEq();
     lowpass.Normalize(-1.5);
+    lowpass.WriteOut();
     
     return 1;
 }
