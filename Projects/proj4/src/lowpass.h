@@ -7,7 +7,7 @@ public:
     short* filtered_;
     char header_[44];   
     float coefficent_;
-    int N_;
+    int iterations_;
 
     unsigned size_;
     unsigned rate_;
@@ -16,10 +16,11 @@ public:
 
 public:
     Lowpass(float _coefficent, int _N, char* wav)
-    : coefficent_(_coefficent), N_(_N)
+    : coefficent_(_coefficent), iterations_(_N)
     {
         ReadWav(wav);
-        filtered_ = new short[N_];
+        // filtered should be length of samples
+        filtered_ = new short[count_];
     }
     ~Lowpass()
     {
@@ -28,11 +29,11 @@ public:
     }
 
     // y[t] = x[t] + a1 * x[t-1]
-    short* FilterEq();
-    short Normalize(short rawInput);
+    void FilterEq();
+    void Normalize(float);
     
-    short* ConvertWave();
-    char* ReadWav(string _file);
+    void ConvertWave();
+    void ReadWav(string _file);
     void WriteOut();
 };
 

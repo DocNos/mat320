@@ -5,43 +5,59 @@
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
+#include <climits>
 using namespace std;
 
-short* Lowpass::FilterEq()
+void Lowpass::FilterEq()
 {
     short* input = reinterpret_cast<short*>(wavData_);
-    filtered_[0] = input[0];
-    for(int i = 1; i < N_; ++i)
+    for(int j = 0; j < iterations_; ++j)
     {
-        filtered_[i] = input[i] + 
-            static_cast<short>(coefficent_ * input[i-1]);
+        filtered_[0] = input[0];
+        for(int i = 1; i < count_; ++i)
+        {
+            filtered_[i] = static_cast<short>(
+                input[i] + coefficent_ * input[i-1]);
+        }
     }
-    return filtered_;
+    
 }
 
 // Normalize Hz value to -1.5dB
 // 
-short Lowpass::Normalize(short rawInput)
+void Lowpass::Normalize(float targetDB)
 {
-    
-
-
-}
-
-short* Lowpass::ConvertWave()
-{
-    // convert to WAVE file
-    float const norm = 2.0f/float(N_),
-              MAX = float((1<<15)-1);
-    short* samples = FilterEq();
-    //short *samples = reinterpret_cast<short*>(wavData_);
-    for (unsigned i=0; i < count_; ++i) 
-    {      
-        samples[i] = Normalize(samples[i]);
+    float maxSample = 0.f;
+    for(unsigned i = 0; i < count_; ++i)
+    {
+        auto abs = fabs(static_cast<float>(filtered_[i]));
+        maxSample = (abs > maxSample) ? abs : maxSample; 
+    }
+    unsigned maxInt = pow(2, 15);
+    // db = 20 * log10(hz value / sampleRef)
+    // 10^(db/20) * sampleRef = hz value
+    float maxHz = pow(10, targetDB / 20) * maxInt;
+    float normal = maxHz / maxSample;
+    for(unsigned i = 0; i < count_; ++i)
+    {
+        filtered_[i] = static_cast<short>(
+            filtered_[i] * normal
+        );
     }
 }
 
-char* Lowpass::ReadWav(string wavFile)
+void Lowpass::ConvertWave()
+{
+    // convert to WAVE file
+    float const norm = 2.0f/float(iterations_),
+              MAX = float((1<<15)-1);
+    for (unsigned i=0; i < count_; ++i) 
+    {      
+        //filtered_[i] = Normalize(samples[i]);
+    }
+}
+
+void Lowpass::ReadWav(string wavFile)
 {
     fstream in(wavFile, ios_base::binary|ios_base::in);
     if (!in)
@@ -77,7 +93,7 @@ int main(int argc, char* argv[])
     }
     
     float coeff = atof(argv[1]);
-    int N = atoi(argv[2]);
+    int iterations = atoi(argv[2]);
     char* wav = argv[3];
 
     if(abs(coeff) >= 1) 
@@ -85,13 +101,14 @@ int main(int argc, char* argv[])
         cout << "Coefficent should be less than 1" << endl;
         return 0;
     }
-    if(N <= 0)
+    if(iterations <= 0)
     {
         cout << "Not enough iterations" << endl;
         return 0;
     }
-    Lowpass lowpass = Lowpass(coeff, N, wav);
+    Lowpass lowpass = Lowpass(coeff, iterations, wav);
     lowpass.FilterEq();
+    lowpass.Normalize(-1.5);
     
     return 1;
 }

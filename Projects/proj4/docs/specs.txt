@@ -1,0 +1,199 @@
+# DSP Project IV - Low Pass Filter Implementation
+## Deliverables List & Implementation Guide Checklist
+
+---
+
+## 📋 **PROJECT DELIVERABLES**
+
+### **Required Files to Submit:**
+- [ ] `lowpass.cpp` - Main program implementation
+- [ ] `Makefile` or build instructions
+- [ ] `lowpass` - Working executable (compiled)
+- [ ] `README.txt` - Basic usage instructions
+- [ ] All files in a single `.zip` archive
+- [ ] Submit via Moodle before midnight on due date
+
+### **Optional Deliverables:**
+- [ ] Sample output WAV files for testing
+- [ ] JUCE implementation (if using JUCE framework)
+- [ ] Test script or batch file
+
+---
+
+## 🛠️ **IMPLEMENTATION CHECKLIST**
+
+### **Phase 1: Setup & File I/O Foundation**
+- [ ] Copy `fourier_envelope.cpp` as starting template
+- [ ] Rename to `lowpass.cpp`
+- [ ] Preserve WAV file header reading/writing code
+- [ ] Preserve data array allocation and file I/O structure
+- [ ] Test compilation with original I/O code
+
+### **Phase 2: Command Line Argument Parsing**
+- [x] Modify `main()` to accept 3 arguments:
+  - [x] `argv[1]` - Filter coefficient a1 (float)
+  - [x] `argv[2]` - Number of iterations n (integer)  
+  - [x] `argv[3]` - Input WAV filename (string)
+- [x] Add error checking for argument count
+- [x] Parse a1 using `atof()`
+- [x] Parse n using `atoi()`
+- [x] Validate n > 0 and |a1| < 1 for stability
+
+### **Phase 3: Remove Fourier Analysis Code**
+- [x] Delete Han window generation code
+- [x] Remove window coefficient array `W`
+- [x] Delete Fourier transform loop (lines with complex numbers)
+- [x] Remove coefficient array `coef`
+- [x] Keep sample data arrays and type casting
+
+### **Phase 4: Implement Digital Filter**
+From equation: **y[t] = x[t] + a1 * x[t-1]**
+
+- [ ] Create filter processing loop structure
+- [ ] Implement single-pass filter:
+  ```cpp
+  // For first iteration
+  short* input = samples;
+  short* output = new short[count];
+  output[0] = input[0]; // First sample has no previous
+  for (int i = 1; i < count; i++) {
+      output[i] = input[i] + a1 * input[i-1];
+  }
+  ```
+- [ ] Handle boundary condition (first sample)
+- [ ] Use proper type casting between short and float
+
+### **Phase 5: Implement N-Iteration Processing**
+- [ ] Wrap filter in outer loop for n iterations
+- [ ] Use ping-pong buffers or copy output to input
+- [ ] Ensure proper memory management between iterations
+- [ ] Consider efficiency for large n values
+
+### **Phase 6: Normalization to -1.5 dB**
+- [ ] **First Pass - Find Maximum:**
+  ```cpp
+  float M1 = 0;
+  for (int i = 0; i < count; i++) {
+      float absVal = abs(output[i]);
+      if (absVal > M1) M1 = absVal;
+  }
+  ```
+  
+- [ ] **Calculate -1.5 dB target:**
+  ```cpp
+  // -1.5 dB = 10^(-1.5/20) ≈ 0.8414
+  float M2 = 32767 * 0.8414; // For 16-bit audio
+  float normFactor = M2 / M1;
+  ```
+  
+- [ ] **Second Pass - Apply Normalization:**
+  ```cpp
+  for (int i = 0; i < count; i++) {
+      float normalized = output[i] * normFactor;
+      // Clamp to 16-bit range
+      if (normalized > 32767) normalized = 32767;
+      if (normalized < -32768) normalized = -32768;
+      samples[i] = (short)normalized;
+  }
+  ```
+
+### **Phase 7: Output File Writing**
+- [ ] Set output filename to `"output.wav"`
+- [ ] Write original WAV header (preserved from input)
+- [ ] Write processed sample data
+- [ ] Close file properly
+- [ ] Verify output file is created
+
+### **Phase 8: Memory Management**
+- [ ] Delete all dynamically allocated arrays
+- [ ] Check for memory leaks
+- [ ] Ensure proper cleanup on error conditions
+
+### **Phase 9: Testing & Validation**
+- [ ] Test with a1 = 0.99 (as shown in textbook example)
+- [ ] Test with n = 1 (single pass)
+- [ ] Test with n = 100 (heavy filtering effect)
+- [ ] Test with different input WAV files
+- [ ] Verify output is audible and shows lowpass characteristics
+- [ ] Check file size matches input
+- [ ] Validate -1.5 dB normalization
+
+### **Phase 10: Build System**
+- [ ] Create Makefile with appropriate flags
+- [ ] Include `-std=c++11` or appropriate standard
+- [ ] Test clean compilation with no warnings
+- [ ] Ensure executable runs on target system
+
+---
+
+## 📊 **KEY TECHNICAL SPECIFICATIONS**
+
+### **Filter Equation:**
+```
+y[t] = x[t] + a1 * x[t-1]
+```
+
+### **Magnitude Response:**
+```
+|H(ω)| = √(1 + a1² + 2*a1*cos(ω))
+```
+
+### **Normalization Formula:**
+```
+-1.5 dB = 20*log10(ratio)
+ratio = 10^(-1.5/20) ≈ 0.8414
+Target Max = 32767 * 0.8414
+```
+
+### **Command Line Format:**
+```bash
+./lowpass <a1> <n> <input.wav>
+# Example: ./lowpass 0.99 100 test.wav
+```
+
+---
+
+## ⚠️ **CRITICAL REQUIREMENTS**
+
+1. **File Format:** Input/output must be 16-bit mono WAV files
+2. **Filter Stability:** Ensure |a1| < 1 for stable filter
+3. **Normalization:** Must normalize to exactly -1.5 dB
+4. **Output Name:** Output file MUST be named "output.wav"
+5. **Type Casting:** Maintain proper conversions between short/float
+6. **Iterative Processing:** Support running filter n times
+
+---
+
+## 🐛 **COMMON PITFALLS TO AVOID**
+
+- Don't forget to handle the first sample (no previous sample exists)
+- Ensure proper memory allocation for intermediate buffers
+- Avoid integer overflow when converting between types
+- Remember to normalize AFTER all filter iterations complete
+- Don't modify the WAV header - preserve it exactly
+- Check for divide-by-zero if M1 = 0 during normalization
+
+---
+
+## ✅ **FINAL SUBMISSION CHECKLIST**
+
+- [ ] Program compiles without errors or warnings
+- [ ] Executable runs with correct command line arguments
+- [ ] Output file "output.wav" is created successfully
+- [ ] Audio output demonstrates lowpass filtering effect
+- [ ] Normalization to -1.5 dB is working correctly
+- [ ] All files zipped into single archive
+- [ ] Archive named appropriately (e.g., "YourName_Project4.zip")
+- [ ] Submitted before midnight deadline on Moodle
+
+---
+
+## 📚 **REFERENCE MATERIALS**
+
+- Chapter 4, Section 3 of textbook (Figure 3.1, page 67)
+- `fourier_envelope.cpp` for WAV file I/O template
+- Filter coefficient a1 = 0.99 for testing (from textbook example)
+
+---
+
+*Note: This checklist follows the requirements from Math 320 Programming Project IV - Fall 2025*
