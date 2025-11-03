@@ -41,7 +41,8 @@ public:
     : coefficent_(_coefficent), iterations_(_N)
     {
         ReadWav(wav);
-        Normalize_Signal(normalizedInput_, -1.5);
+        // normalize input for easier handling
+        Normalize_Signal(normalizedInput_);
         // filtered should be length of samples
         filtered_ = new float[count_];
     }
