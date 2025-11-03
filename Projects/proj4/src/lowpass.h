@@ -98,7 +98,7 @@ public:
         "how far below the loudest sample is this sample?" 
         The loudest sample would be 0 dB, everything else negative.
     */
-    void Normalize_Signal(vector<float>& input, float db)
+    void Normalize_Signal(vector<float>& input)
     {
         fstream out1("./out/sampleInput.txt", ios::out);
         float max = 0.f;

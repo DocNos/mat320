@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     }
     Lowpass lowpass = Lowpass(coeff, iterations, wav);
     lowpass.FilterEq();
-    //lowpass.Normalize(-1.5);
+    lowpass.Normalize(-1.5);
     // cout << lowpass;
     lowpass.WriteOut();
 
