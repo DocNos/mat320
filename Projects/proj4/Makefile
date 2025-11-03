@@ -65,7 +65,7 @@ release: clean all
 
 test: all
 	@echo "Running test with transrights.wav..."
-	@echo "Command: ./$(BINDIR)/$(TARGET) 0.99 100 transrights.wav"
+	@echo "Command: ./$(BINDIR)/$(TARGET) 0.02 100 transrights.wav"
 	./$(BINDIR)/$(TARGET) 0.02 100 transrights.wav
 	@echo ""
 	@echo "Output written to output.wav"
