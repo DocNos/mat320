@@ -113,6 +113,6 @@ int main(int argc, char* argv[])
     lowpass.FilterEq();
     lowpass.Normalize(-1.5);
     lowpass.WriteOut();
-    
-    return 1;
+
+    return 0;
 }
