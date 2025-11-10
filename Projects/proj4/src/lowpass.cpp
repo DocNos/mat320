@@ -1,56 +1,49 @@
 #include "lowpass.h"
 // #include <algorithm>
-#include <fstream>
-#include <complex>
-#include <cstdlib>
-#include <cmath>
-#include <iostream>
-#include <climits>
-using namespace std;
+
+
 
 void Lowpass::FilterEq()
 {
-    short* input = reinterpret_cast<short*>(wavData_);
+    // Use normalized input (±1.5 range)
+    float* input = normalizedInput_.data();
 
     // First iteration: input -> filtered
     filtered_[0] = input[0];
     for(unsigned i = 1; i < count_; ++i)
     {
-        filtered_[i] = static_cast<short>(
-            input[i] + coefficent_ * input[i-1]);
+        filtered_[i] = input[i] + coefficent_ * input[i-1];
     }
 
+    // Subsequent iterations: filtered -> filtered
     for(int j = 1; j < iterations_; ++j)
     {
-        filtered_[0] = filtered_[0]; 
+        filtered_[0] = filtered_[0];
         for(unsigned i = 1; i < count_; ++i)
         {
-            filtered_[i] = static_cast<short>(
-                filtered_[i] + coefficent_ * filtered_[i-1]);
+            filtered_[i] = filtered_[i] + coefficent_ * filtered_[i-1];
         }
     }
 }
 
-// Normalize Hz value to -1.5dB
-// 
+// Normalize filtered output to -1.5dB
 void Lowpass::Normalize(float targetDB)
 {
     float maxSample = 0.f;
     for(unsigned i = 0; i < count_; ++i)
     {
-        auto abs = fabs(static_cast<float>(filtered_[i]));
-        maxSample = (abs > maxSample) ? abs : maxSample; 
+        float abs = fabs(filtered_[i]);
+        maxSample = (abs > maxSample) ? abs : maxSample;
     }
-    unsigned maxInt = pow(2, 15);
-    // db = 20 * log10(hz value / sampleRef)
-    // 10^(db/20) * sampleRef = hz value
-    float maxHz = pow(10, targetDB / 20) * maxInt;
-    float normal = maxHz / maxSample;
+
+    // M2 = 32767 * 10^(-1.5/20)
+    unsigned maxInt = 32767;
+    float M2 = pow(10, targetDB / 20) * maxInt;
+    float normalFactor = M2 / maxSample;
+
     for(unsigned i = 0; i < count_; ++i)
     {
-        filtered_[i] = static_cast<short>(
-            filtered_[i] * normal
-        );
+        filtered_[i] = filtered_[i] * normalFactor;
     }
 }
 
@@ -70,6 +63,12 @@ void Lowpass::ReadWav(string wavFile)
     wavData_ = new char[size_];
     in.read(wavData_,size_);
 
+    short* samples = reinterpret_cast<short*>(wavData_);
+    for(unsigned i = 0; i < count_; ++i)
+    {
+        normalizedInput_.push_back(static_cast<float>(samples[i]));
+    }
+
     cout << "The sample rate is:  " << rate_ << endl;
     cout << "The data size is:  " << size_ << endl;
 }
@@ -79,7 +78,11 @@ void Lowpass::WriteOut()
     short* samples = reinterpret_cast<short*>(wavData_);
     for(unsigned i = 0; i < count_; ++i)
     {
-        samples[i] = filtered_[i];
+        // Convert float to short with clamping
+        float val = filtered_[i];
+        if (val > 32767.f) val = 32767.f;
+        if (val < -32768.f) val = -32768.f;
+        samples[i] = static_cast<short>(val);
     }
 
     fstream out("output.wav",ios_base::binary|ios_base::out);
@@ -112,6 +115,7 @@ int main(int argc, char* argv[])
     Lowpass lowpass = Lowpass(coeff, iterations, wav);
     lowpass.FilterEq();
     lowpass.Normalize(-1.5);
+    // cout << lowpass;
     lowpass.WriteOut();
 
     return 0;

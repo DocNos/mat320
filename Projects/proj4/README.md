@@ -11,10 +11,10 @@ Digital lowpass filter implementation for 16-bit mono WAV files using the equati
 # Build (creates directories automatically)
 make all
 
-# Run with light filtering
-./bin/lowpass 0.99 10 input.wav
+# Run with subtle filtering
+./bin/lowpass 0.02 10 input.wav
 
-# Run with heavy filtering
+# Run with strong filtering
 ./bin/lowpass 0.99 100 input.wav
 
 # Run test
@@ -27,7 +27,9 @@ make test
 ./bin/lowpass <a1> <n> <input.wav>
 ```
 
-- `<a1>`: Filter coefficient (0 < |a1| < 1, typically 0.9-0.99)
+- `<a1>`: Filter coefficient (0 < |a1| < 1)
+  - **Larger values** (0.9-0.99) = stronger lowpass effect
+  - **Smaller values** (0.01-0.1) = weaker lowpass effect
 - `<n>`: Number of iterations (positive integer)
 - `<input.wav>`: Input WAV file (16-bit mono)
 - **Output:** `output.wav` (same directory)
@@ -53,14 +55,14 @@ make test         # Build and run test
 ## Examples
 
 ```bash
-# Subtle lowpass (good starting point)
-./bin/lowpass 0.99 10 audio.wav
+# Weak lowpass (subtle effect)
+./bin/lowpass 0.02 10 audio.wav
 
-# Aggressive lowpass (like Figure 3.1 in textbook)
+# Moderate lowpass (noticeable effect)
+./bin/lowpass 0.5 50 audio.wav
+
+# Strong lowpass (aggressive filtering, like Figure 3.1 in textbook)
 ./bin/lowpass 0.99 100 audio.wav
-
-# Strong coefficient with many iterations
-./bin/lowpass 0.02 100 audio.wav
 ```
 
 ## Project Structure
