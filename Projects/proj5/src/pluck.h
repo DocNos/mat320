@@ -44,13 +44,15 @@ class Pluck
 {
 private:
     WavHeader header_;
-    FilterParams parameters_;
+    vector<float> semitones_;
+    //FilterParams parameters_;
     queue<float> delayQueue_;
     vector<float> input_;
     vector<int16_t> output_;
+    
 
     unsigned duration_;
-    float frequency_;
+    float frequencyBase_;
     unsigned SAMPLE_RATE = 44100;
     unsigned BITS_PER_SAMPLE = 16;
     int CLAMP_RANGE = 15000;
@@ -59,18 +61,31 @@ private:
 
 public:
     Pluck(unsigned _duration, float _frequency)
-    : delayQueue_(queue<float>())
+    : delayQueue_(queue<float>()), semitones_(vector<float>(_duration))
     , duration_(_duration)
-    , frequency_(_frequency)
+    , frequencyBase_(_frequency)
     {
         header_ = createDefault(duration_, 1, SAMPLE_RATE, BITS_PER_SAMPLE);
-        parameters_ = calculateParameters(frequency_);
+/*----| 
+    [0]F -->> [1](F)2* 2/12 -->> [2](F)2* 4/12 -->> [3](F)2* 5/12 -->> 
+    [4](F)2*  7/12 -->> [5](F)2* 9/12 -->> 
+    [6](F)2* 11/12 -->> [7](F)2* 12/12              |---*/
+        semitones_[0] = frequencyBase_;
+        for(int i = 1, numerator = 2 ; i < duration_; ++i)
+        {
+            float step = (i != 3 || i != 6) ? (2) : (1);
+            semitones_[i] = ( 2.f * (numerator)/ 12.f ) 
+                            * frequencyBase_; 
+            numerator += step;
+        }
+        
+        //parameters_ = calculateParameters(frequencyBase_);
 
-        for(unsigned i = 0; i < parameters_.stepLen; ++i) 
-            delayQueue_.push(0);
-        input_ = vector<float>(duration_ * header_.sampleRate);
+        // for(unsigned i = 0; i < parameters_.stepLen; ++i) 
+        //     delayQueue_.push(0);
+        input_ = vector<float>(duration_ * header_.sampleRate, 0.f);
         output_ = vector<int16_t>(duration_ * header_.sampleRate);   
-        genRandom();
+        // genRandom();
     }
 
     WavHeader createDefault(unsigned audioDuration, unsigned numChannels
@@ -125,7 +140,7 @@ public:
 
         for(int i = 0; i < RANDOM_SAMPLES; i++) 
         {
-            input_.push_back(dis(gen));
+            input_[i] = (dis(gen));
         }
     }
 
@@ -146,9 +161,13 @@ public:
         out.write(wavData_, size_);
     } */
 
+    void Execute();
+    // y[n] = -a * y[n-1] + x[n-1] + a * x[n]
+    void Delay(unsigned, FilterParams);
+    // y[n] = 0.5 * (x[n] + x[n-1])
+    float Lowpass(float);
+    float Allpass(float);
 
-    void Lowpass();
-    void Delay();
 
 };
 

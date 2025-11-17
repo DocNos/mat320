@@ -1,14 +1,39 @@
 #include "pluck.h"
 
-
-void Pluck::Delay()
+void Pluck::Execute()
 {
-
+    
 }
 
-void Pluck::Lowpass()
+void Pluck::Delay(unsigned index, FilterParams currParams)
 {
+    float delayed = delayQueue_.front();
+    delayQueue_.pop();
 
+    float delayOut = (delayed * 1) + input_[index];
+    float lowpassOut = Lowpass(delayOut);
+    float allpassOut = Allpass(lowpassOut);
+    output_[index] = allpassOut;
+
+    // Feedback - "string vibration"
+    delayQueue_.push(allpassOut);
+}
+
+float Pluck::Lowpass(float val)
+{
+    float processed = 0.f;
+    for(int i = 0; i < RANDOM_SAMPLES; ++i)
+    {
+
+    }
+    return processed;
+}
+
+float Pluck::Allpass(float val)
+{
+    float processed = 0.f;
+
+    return processed;
 }
 
 int main(int argc, char* argv[])
