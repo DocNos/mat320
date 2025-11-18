@@ -2,34 +2,44 @@
 
 void Pluck::Execute()
 {
-    
-}
-
-void Pluck::Delay(unsigned index, FilterParams currParams)
-{
-    float delayed = delayQueue_.front();
-    delayQueue_.pop();
-
-    float delayOut = (delayed * 1) + input_[index];
-    float lowpassOut = Lowpass(delayOut);
-    float allpassOut = Allpass(lowpassOut);
-    output_[index] = allpassOut;
-
-    // Feedback - "string vibration"
-    delayQueue_.push(allpassOut);
-}
-
-float Pluck::Lowpass(float val)
-{
-    float processed = 0.f;
-    for(int i = 0; i < RANDOM_SAMPLES; ++i)
+    int offset = 0;
+    for(int i = 0; i < duration_; ++i)
     {
-
+        FilterParams currParams = 
+            calculateParameters(semitones_[i]);
+        Reset(currParams);
+        genRandom();
+        Delay(currParams, offset);
+        offset += header_.sampleRate;
     }
+}
+
+void Pluck::Delay(FilterParams currParams, int& offset)
+{
+    float decayMult = pow(STD_R, currParams.stepLen);
+    for(int i = 0; i < header_.sampleRate; ++i)
+    {
+        float delayed = delayQueue_.front();
+        delayQueue_.pop();
+        float delayOut = (delayed * decayMult) + input_[i];
+        float lowpassOut = Lowpass(delayOut);
+        float allpassOut = Allpass(lowpassOut);
+        output_[offset + i] = 
+            static_cast<int16_t>(allpassOut);
+        // Feedback - "string vibration"
+        delayQueue_.push(allpassOut);
+    }    
+}
+
+float Pluck::Lowpass(float currSample)
+{
+    float processed = LOWPASS_COEFF 
+        * (currSample + lp_Prev_);
+    lp_Prev_ = currSample;
     return processed;
 }
 
-float Pluck::Allpass(float val)
+float Pluck::Allpass(FilterParams currParams, float currSample)
 {
     float processed = 0.f;
 

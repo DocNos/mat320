@@ -53,30 +53,34 @@ private:
 
     unsigned duration_;
     float frequencyBase_;
+    float lp_Prev_;
+    float ap_PrevInput_;
+    float ap_PrevOutput_;
+
     unsigned SAMPLE_RATE = 44100;
     unsigned BITS_PER_SAMPLE = 16;
     int CLAMP_RANGE = 15000;
     float STD_R = 0.99985f;
     unsigned RANDOM_SAMPLES = 100;
+    float LOWPASS_COEFF = 0.5f;
 
 public:
     Pluck(unsigned _duration, float _frequency)
     : delayQueue_(queue<float>()), semitones_(vector<float>(_duration))
-    , duration_(_duration)
-    , frequencyBase_(_frequency)
+    , duration_(_duration), frequencyBase_(_frequency), lp_Prev_(0.f)
+    , ap_PrevInput_(0.f), ap_PrevOutput_(0.f)
     {
         header_ = createDefault(duration_, 1, SAMPLE_RATE, BITS_PER_SAMPLE);
 /*----| 
     [0]F -->> [1](F)2* 2/12 -->> [2](F)2* 4/12 -->> [3](F)2* 5/12 -->> 
     [4](F)2*  7/12 -->> [5](F)2* 9/12 -->> 
     [6](F)2* 11/12 -->> [7](F)2* 12/12              |---*/
-        semitones_[0] = frequencyBase_;
-        for(int i = 1, numerator = 2 ; i < duration_; ++i)
-        {
-            float step = (i != 3 || i != 6) ? (2) : (1);
-            semitones_[i] = ( 2.f * (numerator)/ 12.f ) 
-                            * frequencyBase_; 
-            numerator += step;
+        
+        int steps[8] = {0, 2, 4, 5, 7, 9, 11, 12};
+        for(int i = 0; i < duration_; ++i)
+        {           
+            semitones_[i] = frequencyBase_ *
+                pow(2.f,(steps[i])/ 12.f);                             
         }
         
         //parameters_ = calculateParameters(frequencyBase_);
@@ -144,6 +148,16 @@ public:
         }
     }
 
+    void Reset(FilterParams curr)
+    {
+        while(!delayQueue_.empty()) delayQueue_.pop();
+        for( int i = 0; i < curr.stepLen; ++i)
+            delayQueue_.push(0);
+        fill(input_.begin(), input_.end(), 0.f);
+        lp_Prev_ = 0.f;
+        ap_PrevInput_ = 0.f;
+        ap_PrevOutput_ = 0.f;
+    }
 /*    void WriteWav()
     {
         short* samples = reinterpret_cast<short*>(wavData_);
@@ -163,84 +177,12 @@ public:
 
     void Execute();
     // y[n] = -a * y[n-1] + x[n-1] + a * x[n]
-    void Delay(unsigned, FilterParams);
+    void Delay(FilterParams, int&);
     // y[n] = 0.5 * (x[n] + x[n-1])
     float Lowpass(float);
-    float Allpass(float);
+    float Allpass(FilterParams, float);
 
 
-};
-
-class Lowpass
-{
-public:
-    // wavData should be float?
-    char* wavData_; 
-    float* filtered_;
-    vector<float> normalizedInput_;
-
-    char header_[44];   
-    float coefficent_;
-    int iterations_;
-
-    unsigned size_;
-    unsigned rate_;
-    unsigned count_;
-
-    unsigned _MAX16_ = 32767;
-
-
-public:
-    Lowpass(float _coefficent, int _N, char* wav)
-    : coefficent_(_coefficent), iterations_(_N)
-    {
-        filtered_ = new float[count_];
-    }
-    ~Lowpass()
-    {
-        delete[] wavData_;
-        delete[] filtered_;
-    }
-    
-    void FilterEq()
-    {
-        // Use normalized input (±1.5 range)
-        float* input = normalizedInput_.data();
-        filtered_[0] = input[0];
-        for(unsigned i = 1; i < count_; ++i)
-        {
-            filtered_[i] = input[i] + coefficent_ * input[i-1];
-        }
-        for(int j = 1; j < iterations_; ++j)
-        {
-            filtered_[0] = filtered_[0];
-            for(unsigned i = 1; i < count_; ++i)
-            {
-                filtered_[i] = filtered_[i] + coefficent_ * filtered_[i-1];
-            }
-        }
-    }
-    
-    void Normalize(float targetDB)
-    {
-        float maxSample = 0.f;
-        for(unsigned i = 0; i < count_; ++i)
-        {
-            float abs = fabs(filtered_[i]);
-            maxSample = (abs > maxSample) ? abs : maxSample;
-        }
-
-        // M2 = 32767 * 10^(-1.5/20)
-        unsigned maxInt = 32767;
-        float M2 = pow(10, targetDB / 20) * maxInt;
-        float normalFactor = M2 / maxSample;
-
-        for(unsigned i = 0; i < count_; ++i)
-        {
-            filtered_[i] = filtered_[i] * normalFactor;
-        }
-    }
- 
 };
 
 
