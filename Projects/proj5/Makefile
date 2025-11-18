@@ -57,7 +57,7 @@ debug: CXXFLAGS += $(DEBUGFLAGS)
 debug: clean all
 
 # Linking
-$(BINDIR)/$(TARGET): $(OBJECTS) | $(BINDIR)
+$(BINDIR)/$(TARGET): $(OBJECTS) | $(BINDIR) $(OUTPUTDIR) $(INPUTDIR) $(TESTDIR) $(DOCDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Compilation pattern
@@ -65,7 +65,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS) | $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Directory creation
-$(BINDIR) $(OBJDIR):
+$(BINDIR) $(OBJDIR) $(OUTPUTDIR) $(INPUTDIR) $(TESTDIR) $(DOCDIR):
 	@mkdir -p $@
 
 ################################################################################

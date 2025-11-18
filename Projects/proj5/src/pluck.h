@@ -1,12 +1,16 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
-#include <random> 
+#include <random>
 #include <cmath>
 #include <vector>
-
+#include <string>
+#include <chrono>
 using namespace std;
-
+using timePoint = chrono::time_point<chrono::high_resolution_clock>;;
+timePoint NowTime() { return chrono::high_resolution_clock::now();}
+chrono::microseconds Duration(timePoint start, timePoint end) 
+    { return chrono::duration_cast<chrono::microseconds>(end - start); }
 // Header is interpreted sequentially by a parser. 
 struct WavHeader 
 {
@@ -29,6 +33,18 @@ struct WavHeader
        char subchunk2ID[4];    // Indicates start of data description
        uint32_t dataSize;      // Size of just the audio samples (exculding size of header) 
                                // NumSamples * numChannels * bitsPerSample/8
+
+    //friend ostream& operator<<(ostream& os, const WavHeader& wav_h)
+    //{
+    //    os << wav_h.chunkID << wav_h.chunkSize << wav_h.format;
+//
+    //    os << wav_h.fmtLabel << wav_h.fmtSize << wav_h.audioFormat;
+    //    os << wav_h.numChannels << wav_h.sampleRate << wav_h.byteRate;        
+    //    os << wav_h.blockAlign << wav_h.bitsPerSample;
+    //    
+    //    os << wav_h.subchunk2ID << wav_h.dataSize;
+    //    return os;
+    //}                          
 };
 
 struct FilterParams 
@@ -36,7 +52,7 @@ struct FilterParams
     float delayLen;     // [D] Exact delay length
     int stepLen;        // [L] Integer delay length, queue step
     float delta;        // Fractional delay
-    float allpassCoeff; // Allpass filter coefficient - delay queue can only hold whole numbers
+    float ap_Coeff;     // Allpass filter coefficient - delay queue can only hold whole numbers
     // for small phase, reduces to (1 - δ) / (1 + δ)
 };
 
@@ -44,9 +60,8 @@ class Pluck
 {
 private:
     WavHeader header_;
-    vector<float> semitones_;
-    //FilterParams parameters_;
     queue<float> delayQueue_;
+    vector<float> semitones_;
     vector<float> input_;
     vector<int16_t> output_;
     
@@ -77,7 +92,7 @@ public:
     [6](F)2* 11/12 -->> [7](F)2* 12/12              |---*/
         
         int steps[8] = {0, 2, 4, 5, 7, 9, 11, 12};
-        for(int i = 0; i < duration_; ++i)
+        for(unsigned i = 0; i < duration_; ++i)
         {           
             semitones_[i] = frequencyBase_ *
                 pow(2.f,(steps[i])/ 12.f);                             
@@ -92,15 +107,15 @@ public:
         // genRandom();
     }
 
-    WavHeader createDefault(unsigned audioDuration, unsigned numChannels
-        , unsigned sampleRate, unsigned bitsSample)
+    WavHeader createDefault(unsigned audioDuration, uint16_t numChannels
+        , unsigned sampleRate, uint16_t bitsSample)
     {
         unsigned headerSize = sizeof(WavHeader) 
             - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
 
         unsigned numSamples = audioDuration * sampleRate;
         unsigned byteRate = sampleRate * numChannels * bitsSample/8;
-        unsigned blockAlignment = numChannels * bitsSample/8;
+        uint16_t blockAlignment = numChannels * bitsSample/8;
         unsigned totalSize = numSamples * numChannels * bitsSample/8;
         WavHeader header = {
             {'R', 'I', 'F', 'F'}   // Chunk ID
@@ -142,7 +157,7 @@ public:
         uniform_int_distribution<> 
             dis(-CLAMP_RANGE, CLAMP_RANGE);
 
-        for(int i = 0; i < RANDOM_SAMPLES; i++) 
+        for(unsigned i = 0; i < RANDOM_SAMPLES; i++) 
         {
             input_[i] = (dis(gen));
         }
@@ -158,31 +173,14 @@ public:
         ap_PrevInput_ = 0.f;
         ap_PrevOutput_ = 0.f;
     }
-/*    void WriteWav()
-    {
-        short* samples = reinterpret_cast<short*>(wavData_);
-        for(unsigned i = 0; i < count_; ++i)
-        {
-            // Convert float to short with clamping
-            float val = filtered_[i];            
-            if (val > CLAMP_RANGE) val = CLAMP_RANGE;
-            if (val < -CLAMP_RANGE) val = -CLAMP_RANGE;
-            samples[i] = static_cast<short>(val);
-        }
-
-        fstream out("output.wav",ios_base::binary|ios_base::out);
-        out.write(header_, 44);
-        out.write(wavData_, size_);
-    } */
-
-    void Execute();
-    // y[n] = -a * y[n-1] + x[n-1] + a * x[n]
+    
+    void WriteWav(string);
+    void Execute();    
     void Delay(FilterParams, int&);
     // y[n] = 0.5 * (x[n] + x[n-1])
     float Lowpass(float);
+    // y[n] = -a * y[n-1] + x[n-1] + a * x[n]
     float Allpass(FilterParams, float);
-
-
 };
 
 
