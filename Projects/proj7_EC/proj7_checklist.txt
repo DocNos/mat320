@@ -1,0 +1,228 @@
+# MAT 320 Project 7: Spectrum Shaping
+# Implementation Checklist for Claude
+
+## PROJECT OVERVIEW
+- Type: Extra Credit (2% max toward course grade)
+- Due: Monday, December 1
+- Language: C++ (JUCE optional)
+- Output: Mono WAV file at 44100 Hz
+- Core Concept: Reson filter applied to digital buzz signal
+
+## DELIVERABLES
+[ ] All source files for recompilation
+[ ] Working executable
+[ ] All files in single zipped folder
+[ ] Output WAV file with filtered buzz sound
+
+## CORE REQUIREMENTS
+
+### 1. User-Controllable Parameters
+[ ] Central frequency (fc) of reson filter
+[ ] Bandwidth (BW) of reson filter
+[ ] Frequency of input buzz signal (f_buzz)
+
+### 2. Signal Flow
+Input: Digital Buzz Signal → Reson Filter → Output WAV
+
+### 3. WAV File Specifications
+[ ] Sample rate: 44100 Hz
+[ ] Channels: 1 (mono)
+[ ] Use Hanson's struct for header
+[ ] Set correct data size before writing
+
+## IMPLEMENTATION STEPS
+
+### Step 1: Digital Buzz Signal Generator
+
+The digital buzz is a periodic impulse train (sum of harmonics):
+- Mathematically: Σ cos(2π * k * f_buzz * n / fs) for k = 1 to K
+- Alternatively: impulse train with period N = fs / f_buzz
+
+Implementation options:
+
+Option A - Impulse Train:
+```
+buzz[n] = 1.0 if (n % period == 0) else 0.0
+where period = round(sample_rate / f_buzz)
+```
+
+Option B - Bandlimited Buzz (sinc-based):
+```
+buzz[n] = sin(π * n * f_buzz / fs * N) / (N * sin(π * n * f_buzz / fs))
+where N = number of harmonics
+```
+
+Option C - Sum of Cosines:
+```
+buzz[n] = (1/K) * Σ cos(2π * k * f_buzz * n / fs) for k=1 to K
+where K = floor(fs / (2 * f_buzz)) to avoid aliasing
+```
+
+### Step 2: Reson Filter Implementation
+
+The reson filter is a second-order IIR bandpass filter.
+
+#### Transfer Function:
+H(z) = (1 - R²) / (1 - 2R*cos(θ)*z^(-1) + R²*z^(-2))
+
+#### Difference Equation:
+y[n] = (1 - R²) * x[n] + 2R*cos(θ)*y[n-1] - R²*y[n-2]
+
+#### Parameter Calculation:
+- θ = 2π * fc / fs  (fc = center frequency, fs = sample rate)
+- R = exp(-π * BW / fs)  (BW = bandwidth in Hz)
+- Alternative: R = 1 - (π * BW / fs) for small bandwidths
+
+#### Filter State Variables:
+- y_n1: previous output y[n-1]
+- y_n2: output two samples ago y[n-2]
+
+### Step 3: Reson Filter Class Structure
+
+```cpp
+class ResonFilter {
+private:
+    double R;           // pole radius
+    double theta;       // pole angle
+    double coeff_a1;    // 2*R*cos(theta)
+    double coeff_a2;    // R*R
+    double gain;        // 1 - R*R
+    double y_n1, y_n2;  // state variables
+
+public:
+    ResonFilter(double centerFreq, double bandwidth, double sampleRate);
+    void reset();
+    double process(double input);
+};
+```
+
+### Step 4: Parameter Relationships
+
+#### Center Frequency (fc):
+- Determines which harmonic of buzz is emphasized
+- Range: typically 100 Hz to 10000 Hz
+- θ = 2π * fc / 44100
+
+#### Bandwidth (BW):
+- Narrow BW (10-50 Hz): very resonant, ringing tone
+- Medium BW (50-200 Hz): moderate resonance
+- Wide BW (200+ Hz): less selective, more harmonics pass
+
+#### R Value Relationship to Bandwidth:
+- R close to 1: narrow bandwidth, high Q, long ringing
+- R close to 0: wide bandwidth, low Q, quick response
+- Typical range: 0.9 to 0.999
+
+### Step 5: Main Processing Loop
+
+```
+1. Get user parameters: fc, BW, f_buzz, duration
+2. Initialize buzz generator with f_buzz
+3. Initialize reson filter with fc, BW
+4. For each sample n from 0 to total_samples:
+   a. Generate buzz sample x[n]
+   b. Filter: y[n] = reson.process(x[n])
+   c. Store y[n] in output buffer
+5. Normalize output to prevent clipping
+6. Write to WAV file
+```
+
+### Step 6: WAV File Output
+- Same as Project 6
+- Use Hanson's struct
+- Calculate data size = num_samples * 2 (for 16-bit)
+- Convert float [-1,1] to int16 [-32767, 32767]
+
+## KEY FORMULAS
+
+### Reson Filter Coefficients
+```
+θ = 2π * fc / fs
+R = exp(-π * BW / fs)
+a1 = 2 * R * cos(θ)
+a2 = R * R
+gain = 1 - R²
+```
+
+### Difference Equation
+```
+y[n] = gain * x[n] + a1 * y[n-1] - a2 * y[n-2]
+```
+
+### Buzz Signal Period
+```
+period_samples = fs / f_buzz
+```
+
+### Quality Factor (Q)
+```
+Q = fc / BW
+```
+
+## USER INTERFACE REQUIREMENTS
+
+Text-based input for parameters:
+- Prompt for center frequency (Hz)
+- Prompt for bandwidth (Hz)
+- Prompt for buzz frequency (Hz)
+- Optional: duration in seconds
+- Optional: output filename
+
+Example interaction:
+```
+Enter center frequency (Hz): 440
+Enter bandwidth (Hz): 50
+Enter buzz frequency (Hz): 110
+Enter duration (seconds): 3
+Output written to: output.wav
+```
+
+## TESTING CHECKLIST
+
+[ ] Buzz signal alone produces expected harmonic-rich sound
+[ ] Reson filter with narrow BW produces singing/ringing tone
+[ ] Changing fc shifts the emphasized frequency
+[ ] Changing BW affects resonance sharpness
+[ ] Filter remains stable (no runaway oscillation)
+[ ] Output WAV plays correctly
+[ ] Various parameter combinations tested
+
+## SUGGESTED TEST CASES
+
+1. fc=440, BW=20, f_buzz=110 → emphasizes 4th harmonic of 110Hz
+2. fc=880, BW=50, f_buzz=220 → emphasizes 4th harmonic of 220Hz
+3. fc=1000, BW=10, f_buzz=100 → very narrow, picks 10th harmonic
+4. fc=500, BW=200, f_buzz=100 → wide band, multiple harmonics
+
+## COMMON PITFALLS TO AVOID
+
+- Using R >= 1 causes filter instability (infinite growth)
+- Not initializing filter state variables to zero
+- Forgetting to normalize output (causes clipping)
+- Buzz frequency too high causes aliasing
+- Very narrow bandwidth may need longer duration to hear effect
+- Integer overflow in WAV conversion
+
+## SPECTRUM SHAPING CONCEPT
+
+The project demonstrates formant synthesis principles:
+- Buzz provides rich harmonic source (like vocal cords)
+- Reson filter shapes spectrum (like vocal tract resonances)
+- Different fc values create vowel-like timbres
+- This is basis of many speech synthesizers
+
+## FILES TO SUBMIT
+
+- main.cpp (entry point with user input handling)
+- BuzzGenerator.h / BuzzGenerator.cpp
+- ResonFilter.h / ResonFilter.cpp
+- WavWriter.h / WavWriter.cpp
+- Compiled executable
+- Sample output .wav file (optional but recommended)
+
+## EXTENSION IDEAS (NOT REQUIRED)
+
+- Multiple reson filters in parallel (formant synthesis)
+- Time-varying parameters for animation
+- Real-time audio output via JUCE
+- Visualization of frequency response

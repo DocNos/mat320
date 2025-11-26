@@ -1,0 +1,431 @@
+# MAT 320 Project 8: Automated Speech Recognition Neural Network
+# Implementation Checklist for Claude
+
+## PROJECT OVERVIEW
+- Type: Extra Credit (2% max toward course grade)
+- Due: Monday, December 1
+- Language: Python
+- Framework: TensorFlow
+- Core Task: Train speech recognition NN, control turtle with voice commands
+
+## PRIMARY RESOURCES
+- YouTube Tutorial: https://www.youtube.com/watch?v=m-JzldXm9bQ (Assembly-AI)
+- Google Tutorial: https://www.tensorflow.org/tutorials/audio/simple_audio
+- Speech Commands Dataset Blog: https://ai.googleblog.com/2017/08/launching-speech-commands-dataset.html
+- Jurafsky SLP Book (Chapter 16): https://web.stanford.edu/~jurafsky/slp3/
+- Audio Recording Tutorial: https://www.youtube.com/watch?v=n2FKsPt83_A&t=960s
+- Generative Audio Blog: https://sander.ai/2020/03/24/audio-generation.html
+
+## DELIVERABLES
+[ ] Python source code files
+[ ] Trained model (saved)
+[ ] Working executable/script
+[ ] All files in single zipped folder
+
+## REQUIREMENTS SUMMARY
+
+### Required Features
+[ ] Train speech recognition neural network
+[ ] Save and load model on local machine
+[ ] Turtle graphics controlled by voice commands
+[ ] Beep sound to indicate recording start time
+[ ] "yes" command returns turtle to starting position
+
+### Optional Features (Extra Credit)
+[ ] "jump" command: repeats previous command twice
+[ ] "back" command: does opposite of previous command
+
+## IMPLEMENTATION STEPS
+
+### Phase 1: Environment Setup
+
+[ ] Install Python 3.8+ (TensorFlow compatibility)
+[ ] Create virtual environment (recommended)
+[ ] Install required packages:
+    ```
+    pip install tensorflow
+    pip install numpy
+    pip install matplotlib
+    pip install sounddevice  # for recording
+    pip install scipy        # for WAV handling
+    pip install pyaudio      # alternative for recording
+    ```
+
+[ ] Verify TensorFlow installation:
+    ```python
+    import tensorflow as tf
+    print(tf.__version__)
+    ```
+
+[ ] Install turtle graphics (usually included in Python stdlib)
+
+### Phase 2: Download Speech Commands Dataset
+
+[ ] Download dataset from TensorFlow:
+    ```python
+    import tensorflow as tf
+    DATASET_PATH = 'data/mini_speech_commands'
+    data_dir = tf.keras.utils.get_file(
+        'mini_speech_commands.zip',
+        origin='http://storage.googleapis.com/download.tensorflow.org/data/mini_speech_commands.zip',
+        extract=True,
+        cache_dir='.', cache_subdir='data'
+    )
+    ```
+
+[ ] Understand dataset structure:
+    - Folders for each command: down, go, left, no, right, stop, up, yes
+    - Each folder contains WAV files of spoken commands
+    - 1-second audio clips at 16kHz
+
+### Phase 3: Audio Preprocessing
+
+[ ] Load and decode audio files:
+    ```python
+    def decode_audio(audio_binary):
+        audio, _ = tf.audio.decode_wav(audio_binary)
+        return tf.squeeze(audio, axis=-1)
+    ```
+
+[ ] Create spectrograms from audio:
+    ```python
+    def get_spectrogram(waveform):
+        spectrogram = tf.signal.stft(
+            waveform, frame_length=255, frame_step=128
+        )
+        spectrogram = tf.abs(spectrogram)
+        return spectrogram[..., tf.newaxis]
+    ```
+
+[ ] Normalize spectrograms for consistent input
+
+[ ] Create data pipeline:
+    ```python
+    def preprocess_dataset(files):
+        # Load audio
+        # Convert to spectrogram
+        # Return (spectrogram, label) pairs
+    ```
+
+### Phase 4: Build Neural Network Model
+
+[ ] Define CNN architecture (following Google tutorial):
+    ```python
+    model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=input_shape),
+        # Preprocessing
+        tf.keras.layers.Resizing(32, 32),
+        tf.keras.layers.Normalization(),
+        
+        # Conv layers
+        tf.keras.layers.Conv2D(32, 3, activation='relu'),
+        tf.keras.layers.Conv2D(64, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Dropout(0.25),
+        
+        # Dense layers
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(num_labels),
+    ])
+    ```
+
+[ ] Compile model:
+    ```python
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=['accuracy']
+    )
+    ```
+
+### Phase 5: Train the Model
+
+[ ] Split data into train/validation/test sets
+
+[ ] Train model:
+    ```python
+    history = model.fit(
+        train_ds,
+        validation_data=val_ds,
+        epochs=EPOCHS,
+        callbacks=[tf.keras.callbacks.EarlyStopping(patience=2)]
+    )
+    ```
+
+[ ] Evaluate on test set:
+    ```python
+    test_loss, test_accuracy = model.evaluate(test_ds)
+    print(f'Test accuracy: {test_accuracy}')
+    ```
+
+[ ] Plot training curves (loss and accuracy)
+
+### Phase 6: Save and Load Model
+
+[ ] Save trained model:
+    ```python
+    model.save('speech_commands_model')
+    # or
+    model.save('speech_commands_model.h5')
+    ```
+
+[ ] Load model for inference:
+    ```python
+    loaded_model = tf.keras.models.load_model('speech_commands_model')
+    ```
+
+### Phase 7: Audio Recording System
+
+[ ] Implement recording function:
+    ```python
+    import sounddevice as sd
+    from scipy.io.wavfile import write
+    
+    def record_command(duration=1.0, sample_rate=16000):
+        print("Recording...")
+        audio = sd.rec(int(duration * sample_rate), 
+                       samplerate=sample_rate, 
+                       channels=1, dtype='float32')
+        sd.wait()
+        return audio.flatten()
+    ```
+
+[ ] REQUIRED: Add beep before recording:
+    ```python
+    import numpy as np
+    
+    def play_beep(frequency=1000, duration=0.2, sample_rate=44100):
+        t = np.linspace(0, duration, int(sample_rate * duration))
+        beep = np.sin(2 * np.pi * frequency * t) * 0.5
+        sd.play(beep, sample_rate)
+        sd.wait()
+    
+    def record_with_beep():
+        play_beep()  # Signal recording start
+        return record_command()
+    ```
+
+### Phase 8: Inference Pipeline
+
+[ ] Preprocess recorded audio same as training:
+    ```python
+    def predict_command(audio, model, labels):
+        # Convert to spectrogram
+        spectrogram = get_spectrogram(audio)
+        spectrogram = spectrogram[tf.newaxis, ...]
+        
+        # Get prediction
+        predictions = model.predict(spectrogram)
+        predicted_index = tf.argmax(predictions[0])
+        return labels[predicted_index]
+    ```
+
+[ ] Map predictions to commands:
+    ```python
+    COMMANDS = ['down', 'go', 'left', 'no', 'right', 'stop', 'up', 'yes']
+    ```
+
+### Phase 9: Turtle Graphics Control
+
+[ ] Initialize turtle:
+    ```python
+    import turtle
+    
+    screen = turtle.Screen()
+    t = turtle.Turtle()
+    t.speed(1)
+    starting_position = t.position()
+    ```
+
+[ ] Define movement functions:
+    ```python
+    STEP_SIZE = 50
+    
+    def execute_command(command, turtle_obj):
+        if command == 'up':
+            turtle_obj.setheading(90)
+            turtle_obj.forward(STEP_SIZE)
+        elif command == 'down':
+            turtle_obj.setheading(270)
+            turtle_obj.forward(STEP_SIZE)
+        elif command == 'left':
+            turtle_obj.setheading(180)
+            turtle_obj.forward(STEP_SIZE)
+        elif command == 'right':
+            turtle_obj.setheading(0)
+            turtle_obj.forward(STEP_SIZE)
+        elif command == 'go':
+            turtle_obj.forward(STEP_SIZE)
+        elif command == 'stop':
+            pass  # Do nothing
+        elif command == 'yes':
+            # REQUIRED: Return to starting position
+            turtle_obj.goto(starting_position)
+        elif command == 'no':
+            pass  # Optional: do nothing or undo
+    ```
+
+### Phase 10: Main Control Loop
+
+[ ] Implement main loop:
+    ```python
+    def main():
+        # Load model
+        model = tf.keras.models.load_model('speech_commands_model')
+        
+        # Setup turtle
+        screen = turtle.Screen()
+        t = turtle.Turtle()
+        starting_pos = t.position()
+        previous_command = None
+        
+        print("Voice-controlled turtle. Say a command!")
+        
+        while True:
+            # Beep and record
+            audio = record_with_beep()
+            
+            # Predict
+            command = predict_command(audio, model, COMMANDS)
+            print(f"Recognized: {command}")
+            
+            # Execute
+            execute_command(command, t)
+            previous_command = command
+            
+            # Check for exit condition
+            if command == 'stop':
+                # Optional: confirm exit
+                pass
+    ```
+
+## OPTIONAL FEATURES IMPLEMENTATION
+
+### "jump" Command (repeat previous twice)
+
+[ ] Record samples of saying "jump"
+[ ] Add to dataset in new folder: data/mini_speech_commands/jump/
+[ ] Retrain model with new class
+[ ] Implement in execute_command:
+    ```python
+    elif command == 'jump':
+        if previous_command and previous_command not in ['jump', 'back', 'yes']:
+            execute_command(previous_command, turtle_obj)
+            execute_command(previous_command, turtle_obj)
+    ```
+
+### "back" Command (opposite of previous)
+
+[ ] Record samples of saying "back"
+[ ] Add to dataset
+[ ] Define opposites:
+    ```python
+    OPPOSITES = {
+        'up': 'down', 'down': 'up',
+        'left': 'right', 'right': 'left',
+        'go': 'back_movement'  # custom
+    }
+    ```
+[ ] Implement in execute_command:
+    ```python
+    elif command == 'back':
+        if previous_command in OPPOSITES:
+            execute_command(OPPOSITES[previous_command], turtle_obj)
+    ```
+
+## TESTING CHECKLIST
+
+[ ] Model trains without errors
+[ ] Model achieves reasonable accuracy (>80% on test set)
+[ ] Model saves and loads correctly
+[ ] Audio recording works
+[ ] Beep plays before recording starts
+[ ] Spectrograms generate correctly from recordings
+[ ] Predictions return valid commands
+[ ] Turtle responds to voice commands
+[ ] "yes" returns turtle to starting position
+[ ] Program runs in continuous loop
+
+## COMMON PITFALLS TO AVOID
+
+- Sample rate mismatch (training uses 16kHz, ensure recording matches)
+- Spectrogram shape mismatch between training and inference
+- Forgetting to expand dimensions for single prediction
+- Turtle window blocking - use screen.update() if needed
+- Microphone permissions on some OS
+- Model overfitting - use dropout and early stopping
+- Recording too short/long - must match training data length
+
+## FILE STRUCTURE SUGGESTION
+
+```
+project8/
+├── data/
+│   └── mini_speech_commands/
+│       ├── down/
+│       ├── go/
+│       ├── left/
+│       ├── right/
+│       ├── up/
+│       ├── yes/
+│       ├── no/
+│       ├── stop/
+│       ├── jump/      # optional
+│       └── back/      # optional
+├── models/
+│   └── speech_commands_model/
+├── train_model.py
+├── audio_utils.py
+├── turtle_controller.py
+├── main.py
+└── requirements.txt
+```
+
+## REQUIREMENTS.TXT
+
+```
+tensorflow>=2.10.0
+numpy
+scipy
+sounddevice
+matplotlib
+```
+
+## KEY CONCEPTS FROM JURAFSKY CHAPTER 16
+
+- Automatic Speech Recognition (ASR) fundamentals
+- Acoustic model: maps audio features to phonemes
+- Spectral analysis: frequency domain representation
+- Neural network approaches: CNNs for spectrograms, RNNs for sequences
+- Feature extraction: MFCCs, spectrograms, mel-spectrograms
+
+## DEBUGGING TIPS
+
+1. Test each component separately:
+   - Recording → save to WAV, verify in audio player
+   - Spectrogram → visualize with matplotlib
+   - Model → test with known samples from dataset
+   - Turtle → test with keyboard input first
+
+2. Print shapes at each step:
+   ```python
+   print(f"Audio shape: {audio.shape}")
+   print(f"Spectrogram shape: {spectrogram.shape}")
+   print(f"Model input shape: {model.input_shape}")
+   ```
+
+3. If accuracy is low:
+   - Add more training epochs
+   - Adjust learning rate
+   - Add data augmentation (noise, time shift)
+   - Check class balance in dataset
+
+## FILES TO SUBMIT
+
+- All Python source files
+- requirements.txt
+- Saved model folder/file
+- Brief README with instructions
+- (Optional) Sample recordings

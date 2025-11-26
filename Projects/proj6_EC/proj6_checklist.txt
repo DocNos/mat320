@@ -1,0 +1,132 @@
+# MAT 320 Project 6: Plucked String Musical Excerpt
+# Implementation Checklist for Claude
+
+## PROJECT OVERVIEW
+- Type: Extra Credit (2% max toward course grade)
+- Due: Monday, December 1
+- Language: C++ (JUCE optional)
+- Output: Mono WAV file at 44100 Hz
+- Core Algorithm: Karplus-Strong Plucked String Filter
+
+## DELIVERABLES
+[ ] All source files for recompilation
+[ ] Working executable
+[ ] All files in single zipped folder
+[ ] Musical excerpt WAV file output
+
+## CORE REQUIREMENTS
+
+### 1. Musical Content Requirements
+[ ] Generate at least 8 bars of music
+[ ] Implement at least 2 voices (polyphony)
+[ ] Mix overlapping voices by simple averaging
+[ ] Use at least 2 different R values for varied pluck sounds
+
+### 2. Karplus-Strong Filter Implementation
+[ ] Implement delay line of length N (N = sample_rate / frequency)
+[ ] Initialize delay line with noise or impulse (white noise typical)
+[ ] Apply lowpass averaging filter: y[n] = R * 0.5 * (y[n-N] + y[n-N-1])
+[ ] R value controls decay rate (0 < R <= 1, closer to 1 = longer sustain)
+
+### 3. WAV File Generation
+[ ] Sample rate: 44100 Hz
+[ ] Channels: 1 (mono)
+[ ] Bit depth: 16-bit typical
+[ ] Use Hanson's struct for header (available on course website)
+[ ] Calculate and set correct data size in header before writing
+[ ] Write header followed by sample data
+
+## IMPLEMENTATION STEPS
+
+### Step 1: WAV Header Setup
+- Borrow/adapt header from existing WAV file
+- Implement struct for WAV header fields:
+  - RIFF chunk descriptor
+  - fmt subchunk (format, channels, sample rate, byte rate, block align, bits per sample)
+  - data subchunk (size, actual audio data)
+- Function to write header with correct data size
+
+### Step 2: Plucked String Filter Class
+- Constructor takes: frequency (Hz), sample_rate, R_value
+- Calculate delay line length: N = round(sample_rate / frequency)
+- Allocate circular buffer of size N
+- Initialize with random noise values in range [-1, 1]
+- Process function returns next sample and updates buffer
+
+### Step 3: Note Generation
+- Function to generate single note: generateNote(frequency, duration_samples, R)
+- Apply Karplus-Strong filter for duration
+- Apply amplitude envelope if desired (attack/decay)
+- Return vector of samples
+
+### Step 4: Musical Sequence Design
+- Define tempo (e.g., 120 BPM)
+- Calculate samples per beat: sample_rate * 60 / tempo
+- Define note sequence for each voice (pitch, start_time, duration)
+- Suggested: simple melody like scales, folk tune, or original composition
+
+### Step 5: Voice Mixing
+- Create output buffer sized for entire piece
+- For each voice:
+  - Generate all notes at correct time positions
+  - Add samples to output buffer at appropriate indices
+- Normalize by dividing by number of overlapping voices (or use 0.5 per voice)
+- Clamp final values to [-1, 1] range
+
+### Step 6: Bar-by-Bar Generation
+- Requirement: "bars should be generated one by one"
+- Process music bar by bar in loop
+- Each bar generates samples, appends to output
+
+### Step 7: File Output
+- Convert float samples to 16-bit integers (multiply by 32767)
+- Calculate total data size: num_samples * bytes_per_sample
+- Update header with data size
+- Write header + data to .wav file
+
+## KEY FORMULAS
+
+### Delay Line Length
+N = round(44100 / f0)
+where f0 is fundamental frequency in Hz
+
+### Note Frequencies (A4 = 440 Hz, equal temperament)
+f = 440 * 2^((n-69)/12)
+where n is MIDI note number (A4 = 69)
+
+### R Value Selection
+- Short pluck (staccato): R ≈ 0.990 - 0.995
+- Medium sustain: R ≈ 0.996 - 0.998
+- Long sustain: R ≈ 0.999 - 0.9995
+
+### Voice Mixing
+output[i] = (voice1[i] + voice2[i]) / 2.0
+
+## EXAMPLE MUSIC SUGGESTIONS
+- "Twinkle Twinkle Little Star" (simple, recognizable)
+- Scale patterns in two voices (thirds or sixths)
+- Simple canon (same melody offset in time)
+- Original 8-bar chord progression with melody
+
+## TESTING CHECKLIST
+[ ] Single note plays correctly at expected pitch
+[ ] Different R values produce audibly different decay rates
+[ ] Multiple voices mix without clipping
+[ ] Output WAV file opens in audio player
+[ ] Music is at least 8 bars long
+[ ] Two distinct voices are audible
+
+## COMMON PITFALLS TO AVOID
+- Forgetting to update WAV header data size
+- Integer overflow when converting to 16-bit
+- Off-by-one errors in delay line indexing
+- Not normalizing mixed voices (causes clipping)
+- Using R = 1.0 exactly (causes infinite sustain/oscillation)
+
+## FILES TO SUBMIT
+- main.cpp (or equivalent entry point)
+- PluckedString.h / PluckedString.cpp (filter implementation)
+- WavWriter.h / WavWriter.cpp (file output)
+- Any additional source files
+- Compiled executable
+- Output .wav file (optional but recommended)
