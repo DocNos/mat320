@@ -1,24 +1,61 @@
 #include "wavAPI.h"
 
-Pluck::Pluck(WavHeader _header, FilterParams _params)
-    : delayQueue_(queue<float>()), semitones_(vector<float>(_params.duration))
-    , duration_(_params.duration), frequencyBase_(_params.baseFrequency), lp_Prev_(0.f)
-    , ap_PrevInput_(0.f), ap_PrevOutput_(0.f)
-{
-    header_ = createDefault(duration_, 1, SAMPLE_RATE, BITS_PER_SAMPLE);
-    int steps[8] = {0, 2, 4, 5, 7, 9, 11, 12};
-    for(unsigned i = 0; i < duration_; ++i)
-    {           
-        semitones_[i] = frequencyBase_ *
-            pow(2.f,(steps[i])/ 12.f);                             
-    }
+Pluck::Pluck(FilterPreset _preset)
+    : header_(_preset.header), preset_(_preset)
+    , delayQueue_(queue<float>())
+    , semitones_(CreateSemitones(_preset.params, _preset.scale))
+    , duration_(_preset.params.duration)
+    , frequencyBase_(_preset.params.baseFrequency)
+    , lp_Prev_(0.f), ap_PrevInput_(0.f), ap_PrevOutput_(0.f)
+{    
     input_ = vector<float>(duration_ * header_.sampleRate, 0.f);
     output_ = vector<int16_t>(duration_ * header_.sampleRate);   
 }
 
+void Pluck::Execute()
+{
+    int offset = 0;
+    //timePoint start = NowTime();
+    for(unsigned i = 0; i < duration_; ++i)
+    {
+        unsigned sampleRate = preset_.sampleRate;
+        float freq = semitones_[i];
+        auto lp_coeff = preset_.params.lowpass_Coefficent;
+        FilterParams currParams = 
+            calculateParameters(preset_.scale, sampleRate, freq, lp_coeff);
+        Reset(currParams);
+        genRandom();
+        Delay(currParams, offset);
+        offset += header_.sampleRate;
+    }
+    //timePoint end = NowTime();
+    //double seconds = Duration(start, end).count() / 1000000.0;
+    //cout << "Execution for " << frequencyBase_ << " complete. Took "
+    //    << seconds << " seconds" << endl;
+    //string filename = "output/pluck_" + to_string((int)frequencyBase_) + ".wav";
+    //WriteWav(filename, header_, output_);
+}
+
+void Pluck::Delay(FilterParams currParams, int& offset)
+{
+    float decayMult = pow(preset_.R_Val, currParams.stepLen);
+    for(unsigned i = 0; i < header_.sampleRate; ++i)
+    {
+        float delayed = delayQueue_.front();
+        delayQueue_.pop();
+        float delayOut = (delayed * decayMult) + input_[i];
+        float lowpassOut = Lowpass(delayOut);
+        float allpassOut = Allpass(currParams, lowpassOut);
+        output_[offset + i] = 
+            static_cast<int16_t>(allpassOut);
+        // Feedback - "string vibration"
+        delayQueue_.push(allpassOut);
+    }    
+}
+
 float Pluck::Lowpass(float currSample)
 {
-    float processed = LOWPASS_COEFF 
+    float processed = preset_.params.lowpass_Coefficent 
         * (currSample + lp_Prev_);
     lp_Prev_ = currSample;
     return processed;
@@ -37,52 +74,12 @@ float Pluck::Allpass(FilterParams currParams, float currSample)
     return output;
 }
 
-WavHeader Pluck::createDefault(unsigned audioDuration, uint16_t numChannels
-        , unsigned sampleRate, uint16_t bitsSample)
-{
-    unsigned headerSize = sizeof(WavHeader) 
-        - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
-    unsigned numSamples = audioDuration * sampleRate;
-    unsigned byteRate = sampleRate * numChannels * bitsSample/8;
-    uint16_t blockAlignment = numChannels * bitsSample/8;
-    unsigned totalSize = numSamples * numChannels * bitsSample/8;
-    WavHeader header = {
-        {'R', 'I', 'F', 'F'}   // Chunk ID
-        , headerSize + totalSize    
-        , {'W', 'A', 'V', 'E'} // File Format
-        , {'f', 'm', 't', ' '} // sub-chunk ID
-        , 16                   // sub-chunk size
-        , 1                    // Audio Format (??)
-        , numChannels          // Mono: 1 Channel
-        , sampleRate           // Sample rate
-        , byteRate          
-        , blockAlignment                 
-        , bitsSample       
-        , {'d', 'a', 't', 'a'} // this data is made out of data
-        , totalSize
-    };
-    return header;
-}
-
-FilterParams Pluck::calculateParameters(float frequency)
-{
-    float delayLen = header_.sampleRate / frequency;
-    int delayStep = static_cast<int>(floor(delayLen));
-    float delayDelta = delayLen - delayStep;
-    FilterParams params =
-    {
-        delayLen
-        , delayStep
-        , delayDelta
-        , (1.f - delayDelta) / (1.f + delayDelta)
-    };
-    return params;
-}
-
 void Pluck::genRandom()
 {
     random_device rd;
     mt19937 gen(rd());
+    auto CLAMP_RANGE = preset_.clampRange;
+    auto RANDOM_SAMPLES = preset_.numRand_Samples;
     uniform_int_distribution<> 
         dis(-CLAMP_RANGE, CLAMP_RANGE);
     for(unsigned i = 0; i < RANDOM_SAMPLES; i++) 

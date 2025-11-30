@@ -8,6 +8,11 @@
 
 using namespace std;
 
+enum Scale
+{
+    Major, Minor5
+};
+
 // Header is interpreted sequentially by a parser. 
 struct WavHeader 
 {
@@ -43,21 +48,22 @@ struct FilterParams
     // for small phase, reduces to (1 - δ) / (1 + δ)
     float lowpass_Coefficent;
 };
-
 struct FilterPreset
 {
     FilterParams params;
     WavHeader header;
+    Scale scale;
     unsigned sampleRate;
     unsigned bitsPerSample;
     float R_Val;
     unsigned numRand_Samples;
+    int clampRange;
     
 };
 // 220, 440, 261.63
 // C Minor blues: C, E♭, F, G♭, G, and B♭
 // A minor blues: A, C, D, E♭, E, and G
-FilterPreset GetPreset(int preset)
+inline FilterPreset GetPreset(int preset)
 {
     float middleC = 261.63;
     float middleD = 293.66;
@@ -68,30 +74,49 @@ FilterPreset GetPreset(int preset)
     float gFlat = fSharp;
     float middleG = 392;
     float a4 = 440;
-    float bFlat = 466.16;  
+    float bFlat = 466.16; 
+    int clampRange = 15000; 
     
+    unsigned sampleRate = 44100;    
+    uint16_t numChannels = 1;
+    uint16_t bitsSample = 16; 
+
+    float percussionR = 0.990f;
+    float rhythmR = 0.995f;
+    float leadR = 0.99985f;
     switch(preset)
     {
         case(0):
         {
-            unsigned sampleRate = 44100;
-            float freq = middleC; 
-            uint16_t numChannels = 1;
-            uint16_t bitsSample = 16;             
+            float freq = middleC;  
+            float rVal = percussionR;  
             FilterParams params = 
-                calculateParameters(sampleRate, freq, 0.5f);  
+                calculateParameters(Minor5, sampleRate, freq, 0.5f);  
             WavHeader header = 
                 createHeader(params, sampleRate, numChannels, bitsSample);        
-            FilterPreset preset0 = 
+            FilterPreset preset = 
             {
-                params, header, sampleRate
-                , bitsSample, 0.99985f, 10
+                params, header, Minor5
+                , sampleRate, bitsSample, rVal
+                , 10, clampRange
             };
-            return preset0;
+            return preset;
         }break;
         case(1):
         {
-
+            float freq = a4;   
+            float rVal = leadR;   
+            FilterParams params = 
+                calculateParameters(Minor5, sampleRate, freq, 0.5f);  
+            WavHeader header = 
+                createHeader(params, sampleRate, numChannels, bitsSample);        
+            FilterPreset preset = 
+            {
+                params, header, Minor5
+                , sampleRate, bitsSample, rVal
+                , 10, clampRange
+            };
+            return preset;
         }break;
         default: return FilterPreset();
 
@@ -122,6 +147,40 @@ public:
 
 };
 
+
+inline vector<float> CreateSemitones
+(FilterParams params, Scale scale)
+{
+    unsigned dur = params.duration;
+    vector<float> semitones = vector<float>(dur);
+    switch(scale)
+    {
+        case(Major): 
+        {
+            int steps[8] = {0, 2, 4, 5, 7, 9, 11, 12};
+            for(unsigned i = 0; i < dur; ++i)
+            {           
+                semitones[i] = params.baseFrequency *
+                    pow(2.f,(steps[i])/ 12.f);                             
+            }            
+        } break;
+        case(Minor5):
+        {
+            int steps[6] = {0, 3, 5, 6, 7, 10};
+            for(unsigned i = 0; i < dur; ++i)
+            {           
+                semitones[i] = params.baseFrequency *
+                    pow(2.f,(steps[i])/ 12.f);                             
+            }  
+        }break;
+        default: break;
+
+    }
+    return semitones;
+    
+}
+
+
 inline WavHeader createHeader(FilterParams params, float sampleRate
 , uint16_t numChannels, uint16_t bitsSample)
 {
@@ -151,15 +210,19 @@ inline WavHeader createHeader(FilterParams params, float sampleRate
     return header;
 }
 
+
+
 inline FilterParams calculateParameters
-(unsigned sampleRate, float frequency, float lowpass_coeff)
+(Scale scale, unsigned sampleRate
+    , float frequency, float lowpass_coeff)
     {
+        int steps = (scale == Major) ? (8) : (6);
         float delayLen = sampleRate / frequency;
         int delayStep = static_cast<int>(floor(delayLen));
         float delayDelta = delayLen - delayStep;
         FilterParams params =
         {
-            delayLen
+            frequency, steps, delayLen
             , delayStep
             , delayDelta
             , (1.f - delayDelta) / (1.f + delayDelta)
