@@ -10,7 +10,7 @@ using namespace std;
 
 enum Scale
 {
-    Major, Minor5
+    Major, Minor5, Minor5_Arpeggio
 };
 
 // Header is interpreted sequentially by a parser. 
@@ -76,12 +76,21 @@ inline vector<float> CreateSemitones
             for(unsigned i = 0; i < dur; ++i)
             {           
                 semitones[i] = params.baseFrequency *
-                    pow(2.f,(steps[i])/ 12.f);                             
+                    pow(2.f,(steps[i]% 8)/ 12.f);                             
             }            
         } break;
         case(Minor5):
         {
             int steps[8] = {0, 3, 5, 6, 7, 10, 12, 15};
+            for(unsigned i = 0; i < dur; ++i)
+            {
+                semitones[i] = params.baseFrequency *
+                    pow(2.f,(steps[i % 8])/ 12.f);
+            }  
+        }break;
+        case(Minor5_Arpeggio):
+        {
+            int steps[8] = {0, 5, 3, 10, 6, 7, 12, 15};
             for(unsigned i = 0; i < dur; ++i)
             {
                 semitones[i] = params.baseFrequency *
@@ -203,9 +212,46 @@ inline FilterPreset GetPreset(int preset)
     float leadR = 0.99985f;
     switch(preset)
     {
+        // Percussion
         case(0):
         {
             float freq = c3;  
+            float rVal = percussionR;  
+            FilterParams params = 
+                calculateParameters(Major, sampleRate, freq, 0.5f, 32);  
+            WavHeader header = 
+                createHeader(params, sampleRate, numChannels, bitsSample);        
+            FilterPreset preset = 
+            {
+                params, header, Major, 32
+                , sampleRate, bitsSample, rVal
+                , 10, clampRange
+                , 0.25f
+            };
+            return preset;
+        }break;
+        // Lead
+        case(1):
+        {
+            float freq = middleC;   
+            float rVal = leadR;   
+            FilterParams params = 
+                calculateParameters(Minor5_Arpeggio, sampleRate, freq, 0.5f, 8);  
+            WavHeader header = 
+                createHeader(params, sampleRate, numChannels, bitsSample);        
+            FilterPreset preset = 
+            {
+                params, header, Minor5_Arpeggio, 8
+                , sampleRate, bitsSample, rVal
+                , 10, clampRange
+                , 1.f
+            };
+            return preset;
+        }break;
+        // Melody
+        case(2):
+        {
+            float freq = middleC;  
             float rVal = rhythmR;  
             FilterParams params = 
                 calculateParameters(Minor5, sampleRate, freq, 0.5f, 32);  
@@ -213,27 +259,10 @@ inline FilterPreset GetPreset(int preset)
                 createHeader(params, sampleRate, numChannels, bitsSample);        
             FilterPreset preset = 
             {
-                params, header, Minor5, 32
+                params, header, Minor5_Arpeggio, 32
                 , sampleRate, bitsSample, rVal
                 , 10, clampRange
                 , 0.25f
-            };
-            return preset;
-        }break;
-        case(1):
-        {
-            float freq = middleC;   
-            float rVal = leadR;   
-            FilterParams params = 
-                calculateParameters(Minor5, sampleRate, freq, 0.5f, 8);  
-            WavHeader header = 
-                createHeader(params, sampleRate, numChannels, bitsSample);        
-            FilterPreset preset = 
-            {
-                params, header, Minor5, 8
-                , sampleRate, bitsSample, rVal
-                , 10, clampRange
-                , 1.f
             };
             return preset;
         }break;
