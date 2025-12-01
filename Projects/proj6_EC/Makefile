@@ -31,7 +31,7 @@ AR = ar
 RM = rm -f
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++17 -I$(SRCDIR) -I$(INCDIR)
+CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -std=c++17 -I$(SRCDIR) -I$(INCDIR)
 LDFLAGS = -lm
 ARFLAGS = rcs
 

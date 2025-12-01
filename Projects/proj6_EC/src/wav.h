@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
-
+#include <algorithm>
 using namespace std;
 
 enum Scale
@@ -53,100 +53,15 @@ struct FilterPreset
     FilterParams params;
     WavHeader header;
     Scale scale;
+    unsigned numNotes;
     unsigned sampleRate;
     unsigned bitsPerSample;
     float R_Val;
     unsigned numRand_Samples;
     int clampRange;
+    float noteDuration;
     
 };
-// 220, 440, 261.63
-// C Minor blues: C, E♭, F, G♭, G, and B♭
-// A minor blues: A, C, D, E♭, E, and G
-inline FilterPreset GetPreset(int preset)
-{
-    float middleC = 261.63;
-    float middleD = 293.66;
-    float eFlat = 311.13;
-    float middleE = 329.63;
-    float middleF = 349.23;
-    float fSharp = 369.99;
-    float gFlat = fSharp;
-    float middleG = 392;
-    float a4 = 440;
-    float bFlat = 466.16; 
-    int clampRange = 15000; 
-    
-    unsigned sampleRate = 44100;    
-    uint16_t numChannels = 1;
-    uint16_t bitsSample = 16; 
-
-    float percussionR = 0.990f;
-    float rhythmR = 0.995f;
-    float leadR = 0.99985f;
-    switch(preset)
-    {
-        case(0):
-        {
-            float freq = middleC;  
-            float rVal = percussionR;  
-            FilterParams params = 
-                calculateParameters(Minor5, sampleRate, freq, 0.5f);  
-            WavHeader header = 
-                createHeader(params, sampleRate, numChannels, bitsSample);        
-            FilterPreset preset = 
-            {
-                params, header, Minor5
-                , sampleRate, bitsSample, rVal
-                , 10, clampRange
-            };
-            return preset;
-        }break;
-        case(1):
-        {
-            float freq = a4;   
-            float rVal = leadR;   
-            FilterParams params = 
-                calculateParameters(Minor5, sampleRate, freq, 0.5f);  
-            WavHeader header = 
-                createHeader(params, sampleRate, numChannels, bitsSample);        
-            FilterPreset preset = 
-            {
-                params, header, Minor5
-                , sampleRate, bitsSample, rVal
-                , 10, clampRange
-            };
-            return preset;
-        }break;
-        default: return FilterPreset();
-
-    }
-}
-
-class WavHandler
-{
-public:
-    unsigned SAMPLE_RATE = 44100;
-    unsigned BITS_PER_SAMPLE = 16;
-    int CLAMP_RANGE = 15000;
-    float STD_R = 0.99985f;
-    unsigned RANDOM_SAMPLES = 100;
-    float LOWPASS_COEFF = 0.5f;
-
-
-public:
-    void ReadWav(string);
-    WavHeader CreateHeader();
-};
-
-class Sample
-{
-public:
-    WavHeader header_;
-    FilterParams params_;
-
-};
-
 
 inline vector<float> CreateSemitones
 (FilterParams params, Scale scale)
@@ -166,11 +81,11 @@ inline vector<float> CreateSemitones
         } break;
         case(Minor5):
         {
-            int steps[6] = {0, 3, 5, 6, 7, 10};
+            int steps[8] = {0, 3, 5, 6, 7, 10, 12, 15};
             for(unsigned i = 0; i < dur; ++i)
-            {           
+            {
                 semitones[i] = params.baseFrequency *
-                    pow(2.f,(steps[i])/ 12.f);                             
+                    pow(2.f,(steps[i % 8])/ 12.f);
             }  
         }break;
         default: break;
@@ -181,7 +96,7 @@ inline vector<float> CreateSemitones
 }
 
 
-inline WavHeader createHeader(FilterParams params, float sampleRate
+inline WavHeader createHeader(FilterParams params, uint32_t sampleRate
 , uint16_t numChannels, uint16_t bitsSample)
 {
     auto audioDuration = params.duration;
@@ -210,13 +125,12 @@ inline WavHeader createHeader(FilterParams params, float sampleRate
     return header;
 }
 
-
-
 inline FilterParams calculateParameters
 (Scale scale, unsigned sampleRate
-    , float frequency, float lowpass_coeff)
+    , float frequency, float lowpass_coeff, unsigned numNotes)
     {
-        int steps = (scale == Major) ? (8) : (6);
+        unsigned steps = numNotes;
+        //unsigned steps = (scale == Major) ? (8) : (6);
         float delayLen = sampleRate / frequency;
         int delayStep = static_cast<int>(floor(delayLen));
         float delayDelta = delayLen - delayStep;
@@ -230,6 +144,107 @@ inline FilterParams calculateParameters
         };
         return params;
     }
+
+inline vector<int16_t> Mix
+(const vector<vector<int16_t>>& voices, unsigned numSamples)
+{
+    int numVoices = voices.size();
+    vector<int16_t> mixed(numSamples);
+    
+    for(unsigned i = 0; i < numSamples; ++i)
+    {
+        int32_t sum = 0;
+        for(int j = 0; j < numVoices; ++j)
+        {
+            sum += voices[j][i];
+        }
+        mixed[i] = static_cast<int16_t>((sum / numVoices));
+    }
+    return mixed;
+}
+
+inline vector<int16_t> BoostAmplitude(vector<int16_t> samples, int16_t boost)
+{
+    for(size_t i = 0; i < samples.size(); ++i) 
+    {
+        int32_t boosted = 
+        static_cast<int32_t>(samples[i]) * boost;
+        samples[i] = 
+        static_cast<int16_t>
+        (clamp(boosted, -32768, 32767));
+    }
+    return samples;
+}
+
+// 220, 440, 261.63
+// C Minor blues: C, E♭, F, G♭, G, and B♭
+// A minor blues: A, C, D, E♭, E, and G
+inline FilterPreset GetPreset(int preset)
+{
+    float middleC = 261.63;
+    float c3 = middleC / 2;
+    float middleD = 293.66;
+    float eFlat = 311.13;
+    float middleE = 329.63;
+    float middleF = 349.23;
+    float fSharp = 369.99;
+    float gFlat = fSharp;
+    float middleG = 392;
+    float a4 = 440;
+    float bFlat = 466.16; 
+    int clampRange = 15000; 
+    
+    unsigned sampleRate = 44100;    
+    uint16_t numChannels = 1;
+    uint16_t bitsSample = 16; 
+
+    float percussionR = 0.990f;
+    float rhythmR = 0.995f;
+    float leadR = 0.99985f;
+    switch(preset)
+    {
+        case(0):
+        {
+            float freq = c3;  
+            float rVal = rhythmR;  
+            FilterParams params = 
+                calculateParameters(Minor5, sampleRate, freq, 0.5f, 32);  
+            WavHeader header = 
+                createHeader(params, sampleRate, numChannels, bitsSample);        
+            FilterPreset preset = 
+            {
+                params, header, Minor5, 32
+                , sampleRate, bitsSample, rVal
+                , 10, clampRange
+                , 0.25f
+            };
+            return preset;
+        }break;
+        case(1):
+        {
+            float freq = middleC;   
+            float rVal = leadR;   
+            FilterParams params = 
+                calculateParameters(Minor5, sampleRate, freq, 0.5f, 8);  
+            WavHeader header = 
+                createHeader(params, sampleRate, numChannels, bitsSample);        
+            FilterPreset preset = 
+            {
+                params, header, Minor5, 8
+                , sampleRate, bitsSample, rVal
+                , 10, clampRange
+                , 1.f
+            };
+            return preset;
+        }break;
+        default: return FilterPreset();
+
+    }
+}
+
+
+
+
 
 inline void WriteWav(const string& filename, const WavHeader& header, const vector<int16_t>& samples)
 {

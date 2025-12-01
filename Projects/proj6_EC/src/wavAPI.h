@@ -16,7 +16,7 @@ inline chrono::microseconds Duration(timePoint start, timePoint end)
 
 class Pluck
 {
-private:
+public:
     WavHeader header_;
     FilterPreset preset_;
     queue<float> delayQueue_;
@@ -25,6 +25,7 @@ private:
     vector<int16_t> output_;    
 
     unsigned duration_;
+    unsigned numSamples_;
     float frequencyBase_;
     float lp_Prev_;
     float ap_PrevInput_;
@@ -34,12 +35,10 @@ public:
     Pluck(FilterPreset);
     
     void genRandom();
-
     void Reset
     (FilterParams);
-
-    void Execute();
-    void Delay(FilterParams, int&);
+    vector<int16_t> Execute();
+    void Delay(FilterParams, int&, unsigned);
     // y[n] = 0.5 * (x[n] + x[n-1])
     float Lowpass(float);
     // y[n] = -a * y[n-1] + x[n-1] + a * x[n]
