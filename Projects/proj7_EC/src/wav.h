@@ -6,12 +6,11 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+
+#include "filter.h"
 using namespace std;
 
-enum Scale
-{
-    Major, Minor5, Minor5_Arpeggio
-};
+
 
 // Header is interpreted sequentially by a parser. 
 struct WavHeader 
@@ -37,17 +36,17 @@ struct WavHeader
                                // NumSamples * numChannels * bitsPerSample/8                         
 };
 
-struct FilterParams 
-{
-    float baseFrequency;
-    unsigned duration;
-    float delayLen;     // [D] Exact delay length
-    int stepLen;        // [L] Integer delay length, queue step
-    float delta;        // Fractional delay
-    float ap_Coeff;     // Allpass filter coefficient - delay queue can only hold whole numbers
-    // for small phase, reduces to (1 - δ) / (1 + δ)
-    float lowpass_Coefficent;
-};
+//struct FilterParams 
+//{
+//    float baseFrequency;
+//    unsigned duration;
+//    float delayLen;     // [D] Exact delay length
+//    int stepLen;        // [L] Integer delay length, queue step
+//    float delta;        // Fractional delay
+//    float ap_Coeff;     // Allpass filter coefficient - delay queue can only hold whole numbers
+//    // for small phase, reduces to (1 - δ) / (1 + δ)
+//    float lowpass_Coefficent;
+//};
 struct FilterPreset
 {
     FilterParams params;
@@ -63,47 +62,38 @@ struct FilterPreset
     
 };
 
-inline vector<float> CreateSemitones
-(FilterParams params, Scale scale)
+inline WavHeader createHeader(Filter filter)
 {
-    unsigned dur = params.duration;
-    vector<float> semitones = vector<float>(dur);
-    switch(scale)
+    FilterParams params = filter.baseParams_;
+    unsigned audioDuration = params.duration;
+    unsigned sampleRate = params.sampleRate;
+    unsigned bitsSample = params.bitsPerSample;
+
+    unsigned headerSize = sizeof(WavHeader) 
+        - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
+    unsigned numSamples = audioDuration * sampleRate;
+    unsigned byteRate = sampleRate * params.numChannels * bitsSample/8;
+    uint16_t blockAlignment = params.numChannels * bitsSample/8;
+    unsigned totalSize = numSamples * params.numChannels * bitsSample/8;
+    WavHeader header = 
     {
-        case(Major): 
-        {
-            int steps[8] = {0, 2, 4, 5, 7, 9, 11, 12};
-            for(unsigned i = 0; i < dur; ++i)
-            {           
-                semitones[i] = params.baseFrequency *
-                    pow(2.f,(steps[i]% 8)/ 12.f);                             
-            }            
-        } break;
-        case(Minor5):
-        {
-            int steps[8] = {0, 3, 5, 6, 7, 10, 12, 15};
-            for(unsigned i = 0; i < dur; ++i)
-            {
-                semitones[i] = params.baseFrequency *
-                    pow(2.f,(steps[i % 8])/ 12.f);
-            }  
-        }break;
-        case(Minor5_Arpeggio):
-        {
-            int steps[8] = {0, 5, 3, 10, 6, 7, 12, 15};
-            for(unsigned i = 0; i < dur; ++i)
-            {
-                semitones[i] = params.baseFrequency *
-                    pow(2.f,(steps[i % 8])/ 12.f);
-            }  
-        }break;
-        default: break;
+        {'R', 'I', 'F', 'F'}   // Chunk ID
+        , headerSize + totalSize    
+        , {'W', 'A', 'V', 'E'} // File Format
+        , {'f', 'm', 't', ' '} // sub-chunk ID
+        , 16                   // sub-chunk size
+        , 1                    // Audio Format (??)
+        , params.numChannels          // Mono: 1 Channel
+        , sampleRate           // Sample rate
+        , byteRate          
+        , blockAlignment                 
+        , bitsSample       
+        , {'d', 'a', 't', 'a'} // this data is made out of data
+        , totalSize
+    };
+    return header;
 
-    }
-    return semitones;
-    
 }
-
 
 inline WavHeader createHeader(FilterParams params, uint32_t sampleRate
 , uint16_t numChannels, uint16_t bitsSample)
@@ -134,25 +124,7 @@ inline WavHeader createHeader(FilterParams params, uint32_t sampleRate
     return header;
 }
 
-inline FilterParams calculateParameters
-(Scale scale, unsigned sampleRate
-    , float frequency, float lowpass_coeff, unsigned numNotes)
-    {
-        unsigned steps = numNotes;
-        //unsigned steps = (scale == Major) ? (8) : (6);
-        float delayLen = sampleRate / frequency;
-        int delayStep = static_cast<int>(floor(delayLen));
-        float delayDelta = delayLen - delayStep;
-        FilterParams params =
-        {
-            frequency, steps, delayLen
-            , delayStep
-            , delayDelta
-            , (1.f - delayDelta) / (1.f + delayDelta)
-            , lowpass_coeff
-        };
-        return params;
-    }
+
 
 inline vector<int16_t> Mix
 (const vector<vector<int16_t>>& voices, unsigned numSamples)
