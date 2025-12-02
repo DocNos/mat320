@@ -1,3 +1,6 @@
+#ifndef WAV_H
+#define WAV_H
+
 #include <iostream>
 #include <fstream>
 #include <queue>
@@ -7,10 +10,8 @@
 #include <string>
 #include <algorithm>
 
-#include "filter.h"
+// #include "filter.h"
 using namespace std;
-
-
 
 // Header is interpreted sequentially by a parser. 
 struct WavHeader 
@@ -35,96 +36,6 @@ struct WavHeader
        uint32_t dataSize;      // Size of just the audio samples (exculding size of header) 
                                // NumSamples * numChannels * bitsPerSample/8                         
 };
-
-//struct FilterParams 
-//{
-//    float baseFrequency;
-//    unsigned duration;
-//    float delayLen;     // [D] Exact delay length
-//    int stepLen;        // [L] Integer delay length, queue step
-//    float delta;        // Fractional delay
-//    float ap_Coeff;     // Allpass filter coefficient - delay queue can only hold whole numbers
-//    // for small phase, reduces to (1 - δ) / (1 + δ)
-//    float lowpass_Coefficent;
-//};
-struct FilterPreset
-{
-    FilterParams params;
-    WavHeader header;
-    Scale scale;
-    unsigned numNotes;
-    unsigned sampleRate;
-    unsigned bitsPerSample;
-    float R_Val;
-    unsigned numRand_Samples;
-    int clampRange;
-    float noteDuration;
-    
-};
-
-inline WavHeader createHeader(Filter filter)
-{
-    FilterParams params = filter.baseParams_;
-    unsigned audioDuration = params.duration;
-    unsigned sampleRate = params.sampleRate;
-    unsigned bitsSample = params.bitsPerSample;
-
-    unsigned headerSize = sizeof(WavHeader) 
-        - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
-    unsigned numSamples = audioDuration * sampleRate;
-    unsigned byteRate = sampleRate * params.numChannels * bitsSample/8;
-    uint16_t blockAlignment = params.numChannels * bitsSample/8;
-    unsigned totalSize = numSamples * params.numChannels * bitsSample/8;
-    WavHeader header = 
-    {
-        {'R', 'I', 'F', 'F'}   // Chunk ID
-        , headerSize + totalSize    
-        , {'W', 'A', 'V', 'E'} // File Format
-        , {'f', 'm', 't', ' '} // sub-chunk ID
-        , 16                   // sub-chunk size
-        , 1                    // Audio Format (??)
-        , params.numChannels          // Mono: 1 Channel
-        , sampleRate           // Sample rate
-        , byteRate          
-        , blockAlignment                 
-        , bitsSample       
-        , {'d', 'a', 't', 'a'} // this data is made out of data
-        , totalSize
-    };
-    return header;
-
-}
-
-inline WavHeader createHeader(FilterParams params, uint32_t sampleRate
-, uint16_t numChannels, uint16_t bitsSample)
-{
-    auto audioDuration = params.duration;
-    
-    unsigned headerSize = sizeof(WavHeader) 
-        - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
-    unsigned numSamples = audioDuration * sampleRate;
-    unsigned byteRate = sampleRate * numChannels * bitsSample/8;
-    uint16_t blockAlignment = numChannels * bitsSample/8;
-    unsigned totalSize = numSamples * numChannels * bitsSample/8;
-    WavHeader header = {
-        {'R', 'I', 'F', 'F'}   // Chunk ID
-        , headerSize + totalSize    
-        , {'W', 'A', 'V', 'E'} // File Format
-        , {'f', 'm', 't', ' '} // sub-chunk ID
-        , 16                   // sub-chunk size
-        , 1                    // Audio Format (??)
-        , numChannels          // Mono: 1 Channel
-        , sampleRate           // Sample rate
-        , byteRate          
-        , blockAlignment                 
-        , bitsSample       
-        , {'d', 'a', 't', 'a'} // this data is made out of data
-        , totalSize
-    };
-    return header;
-}
-
-
 
 inline vector<int16_t> Mix
 (const vector<vector<int16_t>>& voices, unsigned numSamples)
@@ -157,9 +68,112 @@ inline vector<int16_t> BoostAmplitude(vector<int16_t> samples, int16_t boost)
     return samples;
 }
 
+inline void WriteWav(const string& filename, const WavHeader& header, const vector<int16_t>& samples)
+{
+    ofstream wavFile(filename, ios::binary);
+    if (!wavFile.is_open())
+    {
+        cerr << "Error: Could not open file " << filename << " for writing" << endl;
+        return;
+    }
+
+    // Write the header
+    wavFile.write(reinterpret_cast<const char*>(&header), sizeof(WavHeader));
+
+    // Write the sample data
+    wavFile.write(reinterpret_cast<const char*>(samples.data()), samples.size() * sizeof(int16_t));
+
+    wavFile.close();
+    cout << "WAV file written: " << filename << " (" << samples.size() << " samples)" << endl;
+}
+
+
+/*
+struct FilterPreset
+{
+    FilterParams params;
+    WavHeader header;
+    Scale scale;
+    unsigned numNotes;
+    unsigned sampleRate;
+    unsigned bitsPerSample;
+    float R_Val;
+    unsigned numRand_Samples;
+    int clampRange;
+    float noteDuration;
+    
+};*/
+
+/*
+inline WavHeader createHeader(Filter filter)
+{
+    FilterParams params = filter.baseParams_;
+    unsigned audioDuration = params.duration;
+    unsigned sampleRate = params.sampleRate;
+    unsigned bitsSample = params.bitsPerSample;
+
+    unsigned headerSize = sizeof(WavHeader) 
+        - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
+    unsigned numSamples = audioDuration * sampleRate;
+    unsigned byteRate = sampleRate * params.numChannels * bitsSample/8;
+    uint16_t blockAlignment = params.numChannels * bitsSample/8;
+    unsigned totalSize = numSamples * params.numChannels * bitsSample/8;
+    WavHeader header = 
+    {
+        {'R', 'I', 'F', 'F'}   // Chunk ID
+        , headerSize + totalSize    
+        , {'W', 'A', 'V', 'E'} // File Format
+        , {'f', 'm', 't', ' '} // sub-chunk ID
+        , 16                   // sub-chunk size
+        , 1                    // Audio Format (??)
+        , params.numChannels          // Mono: 1 Channel
+        , sampleRate           // Sample rate
+        , byteRate          
+        , blockAlignment                 
+        , bitsSample       
+        , {'d', 'a', 't', 'a'} // this data is made out of data
+        , totalSize
+    };
+    return header;
+}
+*/
+
+/*
+inline WavHeader createHeader(FilterParams params, uint32_t sampleRate
+, uint16_t numChannels, uint16_t bitsSample)
+{
+    auto audioDuration = params.duration;
+    
+    unsigned headerSize = sizeof(WavHeader) 
+        - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
+    unsigned numSamples = audioDuration * sampleRate;
+    unsigned byteRate = sampleRate * numChannels * bitsSample/8;
+    uint16_t blockAlignment = numChannels * bitsSample/8;
+    unsigned totalSize = numSamples * numChannels * bitsSample/8;
+    WavHeader header = {
+        {'R', 'I', 'F', 'F'}   // Chunk ID
+        , headerSize + totalSize    
+        , {'W', 'A', 'V', 'E'} // File Format
+        , {'f', 'm', 't', ' '} // sub-chunk ID
+        , 16                   // sub-chunk size
+        , 1                    // Audio Format (??)
+        , numChannels          // Mono: 1 Channel
+        , sampleRate           // Sample rate
+        , byteRate          
+        , blockAlignment                 
+        , bitsSample       
+        , {'d', 'a', 't', 'a'} // this data is made out of data
+        , totalSize
+    };
+    return header;
+}
+*/
+
+
 // 220, 440, 261.63
 // C Minor blues: C, E♭, F, G♭, G, and B♭
 // A minor blues: A, C, D, E♭, E, and G
+/*
 inline FilterPreset GetPreset(int preset)
 {
     float middleC = 261.63;
@@ -242,26 +256,19 @@ inline FilterPreset GetPreset(int preset)
 
     }
 }
+*/
 
 
+//struct FilterParams 
+//{
+//    float baseFrequency;
+//    unsigned duration;
+//    float delayLen;     // [D] Exact delay length
+//    int stepLen;        // [L] Integer delay length, queue step
+//    float delta;        // Fractional delay
+//    float ap_Coeff;     // Allpass filter coefficient - delay queue can only hold whole numbers
+//    // for small phase, reduces to (1 - δ) / (1 + δ)
+//    float lowpass_Coefficent;
+//};
 
-
-
-inline void WriteWav(const string& filename, const WavHeader& header, const vector<int16_t>& samples)
-{
-    ofstream wavFile(filename, ios::binary);
-    if (!wavFile.is_open())
-    {
-        cerr << "Error: Could not open file " << filename << " for writing" << endl;
-        return;
-    }
-
-    // Write the header
-    wavFile.write(reinterpret_cast<const char*>(&header), sizeof(WavHeader));
-
-    // Write the sample data
-    wavFile.write(reinterpret_cast<const char*>(samples.data()), samples.size() * sizeof(int16_t));
-
-    wavFile.close();
-    cout << "WAV file written: " << filename << " (" << samples.size() << " samples)" << endl;
-}
+#endif 

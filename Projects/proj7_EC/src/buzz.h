@@ -1,9 +1,9 @@
-#ifndef BUZZ_GENERATOR_H
-#define BUZZ_GENERATOR_H
+#ifndef BUZZ_H
+#define BUZZ_H
 
 #include <vector>
 #include <cmath>
-
+using namespace std;
 /**
  * BuzzGenerator - Generates a digital buzz signal (periodic impulse train)
  *
@@ -11,7 +11,7 @@
  * or by generating an impulse train. It serves as the source signal for
  * spectrum shaping with the reson filter.
  */
-class BuzzGenerator {
+class Buzz {
 private:
     double sampleRate;
     double frequency;
@@ -19,12 +19,7 @@ private:
     double period;
 
 public:
-    /**
-     * Constructor
-     * @param freq The fundamental frequency of the buzz signal (Hz)
-     * @param sr The sample rate (Hz), typically 44100
-     */
-    BuzzGenerator(double freq, double sr);
+    Buzz(double freq, double sr);
 
     /**
      * Generate buzz signal samples

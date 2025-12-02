@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "BuzzGenerator.h"
-#include "ResonFilter.h"
+#include "buzz.h"
+#include "reson.h"
 #include "wav.h"
 
 using namespace std;

@@ -1,5 +1,5 @@
-#ifndef RESON_FILTER_H
-#define RESON_FILTER_H
+#ifndef RESON_H
+#define RESON_H
 
 #include <vector>
 #include <cmath>
