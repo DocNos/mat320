@@ -186,7 +186,7 @@ public:
     // R = exp(-π * BW / fs) 
     double calcRadius(){
         return exp(-M_PI * 
-            (params_.bandwidth_ / baseParams_.sampleRate));
+            (params_.bandwidth / baseParams_.sampleRate));
     }
 
     // a1 = 2 * R * cos(θ)
@@ -208,7 +208,7 @@ public:
 
 
 inline vector<float> CreateSemitones
-(PluckParams params, Scale scale)
+(FilterParams params, Scale scale)
 {
     unsigned dur = params.duration;
     vector<float> semitones = vector<float>(dur);
@@ -219,7 +219,7 @@ inline vector<float> CreateSemitones
             int steps[8] = {0, 2, 4, 5, 7, 9, 11, 12};
             for(unsigned i = 0; i < dur; ++i)
             {           
-                semitones[i] = params.baseFrequency *
+                semitones[i] = params.frequency *
                     pow(2.f,(steps[i]% 8)/ 12.f);                             
             }            
         } break;
@@ -228,7 +228,7 @@ inline vector<float> CreateSemitones
             int steps[8] = {0, 3, 5, 6, 7, 10, 12, 15};
             for(unsigned i = 0; i < dur; ++i)
             {
-                semitones[i] = params.baseFrequency *
+                semitones[i] = params.frequency *
                     pow(2.f,(steps[i % 8])/ 12.f);
             }  
         }break;
@@ -237,7 +237,7 @@ inline vector<float> CreateSemitones
             int steps[8] = {0, 5, 3, 10, 6, 7, 12, 15};
             for(unsigned i = 0; i < dur; ++i)
             {
-                semitones[i] = params.baseFrequency *
+                semitones[i] = params.frequency *
                     pow(2.f,(steps[i % 8])/ 12.f);
             }  
         }break;
@@ -257,9 +257,9 @@ inline PluckParams calculateParameters
     float delayLen = sampleRate / frequency;
     int delayStep = static_cast<int>(floor(delayLen));
     float delayDelta = delayLen - delayStep;
-    DelayParams params =
+    PluckParams params =
     {
-        frequency, steps, delayLen
+        steps, delayLen
         , delayStep
         , delayDelta
         , (1.f - delayDelta) / (1.f + delayDelta)

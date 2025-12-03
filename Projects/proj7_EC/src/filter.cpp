@@ -1,10 +1,21 @@
 #include "filter.h"
 
+void ResonFilter::Execute()
+{
+
+
+}
+
+void ResonFilter::Reset()
+{
+    
+}
+
 void ResonFilter::calcParameters(string preset)
 {
     ResonPreset settings = ResonPresets.at(preset);
     baseParams_.frequency = settings.centerFreq;
-    params_.bandwidth_ = settings.bandwidth;
+    params_.bandwidth = settings.bandwidth;
     
     params_.theta = calcTheta();
     params_.R = calcRadius();
@@ -15,7 +26,3 @@ void ResonFilter::calcParameters(string preset)
 
 }
 
-ResonFilter CreateReson()
-{
-    FilterParams baseParams;
-}
