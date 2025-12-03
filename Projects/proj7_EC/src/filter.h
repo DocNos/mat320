@@ -148,19 +148,20 @@ class ResonFilter : public Filter
 {
 public:
     ResonParams params_;
-    vector<double> output_;
     Buzz buzz_;
+    vector<double> output_;    
     double y_n1;        // y[n-1] - previous output
     double y_n2;        // y[n-2] - output two samples ago
 
 public:
     ResonFilter(FilterParams _params)
-    : Filter(_params), output_(baseParams_.numSamples)
+    : Filter(_params)
     , buzz_("full110"
         , baseParams_.sampleRate, baseParams_.numSamples)
     {
         calcParameters("vowel_a");
         buzz_.generateCosines();
+        output_ = buzz_.output_;
     }
 // ----------------------- Processing
 /*
@@ -170,7 +171,10 @@ public:
    c. Store y[n] in output buffer
  Normalize output to prevent clipping
 */
+    //y[n] = gain * x[n] + a1 * y[n-1] - a2 * y[n-2]
     void Execute();
+    double ExecuteSingle(int index);
+
     void Reset();
 
 

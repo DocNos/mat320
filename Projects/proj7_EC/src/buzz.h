@@ -31,6 +31,8 @@ public:
     double numSamples_;
     double period_; 
 
+    vector<double> output_;
+
 
 public:
     Buzz(string _preset, double _sampleRate, double _numSamples)
@@ -38,13 +40,14 @@ public:
     , numSamples_(_numSamples)
     , sampleRate_(_sampleRate)
     , period_(sampleRate_ / params_.buzzFreq)
+    , output_(numSamples_)
     {}
 
-    vector<double> generateImpulse();
+    void generateImpulse();
 
     // Period determined by buzz frequency
     // buzz[n] = (1/K) * Σ cos(2π * k * f_buzz * n / fs) for k=1 to K
-    vector<double> generateCosines();
+    void generateCosines();
 };
 
 #endif // BUZZ_GENERATOR_H

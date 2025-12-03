@@ -1,19 +1,16 @@
 #include "buzz.h"
 
-vector<double> Buzz::generateImpulse()
+void Buzz::generateImpulse()
 {
-    vector<double> output(numSamples_);
     int period = static_cast<int>(round(period_));
     for(int n = 0; n < numSamples_; n+=period)
     {
-        output[n] = 1.0 / period; // normalize
+        output_[n] = 1.0 / period; // normalize
     }
-    return output;
 }
 
-vector<double> Buzz::generateCosines()
+void Buzz::generateCosines()
 {
-    vector<double> output(numSamples_);
     for(int n = 0; 0 < numSamples_; ++n)
     {
         double sum = 0.0;
@@ -26,7 +23,6 @@ vector<double> Buzz::generateCosines()
         }
         // Normalize by number of harmonics
         sum /= params_.numHarmonics;
-        output[n] = sum;
+        output_[n] = sum;
     }
-    return output;
 }

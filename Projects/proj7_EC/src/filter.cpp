@@ -6,9 +6,19 @@ void ResonFilter::Execute()
 
 }
 
+double ResonFilter::ExecuteSingle(int index)
+{
+    double feedForward = 
+        params_.gain * output_[index] + params_.coeff_a1;
+    double feedBack = 
+        output_[ (index - 1)% 0 ] - params_.coeff_a2 
+        * output_[ (index - 2)% 0];
+    return feedForward * feedBack;
+}
+
 void ResonFilter::Reset()
 {
-    
+
 }
 
 void ResonFilter::calcParameters(string preset)
