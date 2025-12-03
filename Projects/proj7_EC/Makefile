@@ -87,28 +87,91 @@ mrproper: distclean
 	$(RM) -r $(OBJDIR) $(BINDIR)
 
 ################################################################################
-# TEST TARGETS
+# TEST TARGETS WITH PRESETS
 ################################################################################
 
-# Run main program
-test: $(BINDIR)/$(TARGET)
-	./$(BINDIR)/$(TARGET)
+# Quick test - single combination
+test-quick: $(BINDIR)/$(TARGET)
+	@echo "Running quick test: full110 buzz + vowel_a reson..."
+	./$(BINDIR)/$(TARGET) full110 vowel_a
 
-# Run and play output
-test-play: $(BINDIR)/$(TARGET)
-	./$(BINDIR)/$(TARGET)
+# Test all vowel formants with full buzz
+test-vowels: $(BINDIR)/$(TARGET)
+	@echo "Generating vowel sounds..."
+	./$(BINDIR)/$(TARGET) full110 vowel_a
+	./$(BINDIR)/$(TARGET) full110 vowel_e
+	./$(BINDIR)/$(TARGET) full110 vowel_i
+	./$(BINDIR)/$(TARGET) full110 vowel_o
+	./$(BINDIR)/$(TARGET) full110 vowel_u
+
+# Test different buzz richness with narrow filter
+test-buzz-variants: $(BINDIR)/$(TARGET)
+	@echo "Testing buzz harmonic variations..."
+	./$(BINDIR)/$(TARGET) minDull narrow_440
+	./$(BINDIR)/$(TARGET) midDull narrow_440
+	./$(BINDIR)/$(TARGET) maxDull narrow_440
+	./$(BINDIR)/$(TARGET) full110 narrow_440
+
+# Test bandwidth variations
+test-bandwidth: $(BINDIR)/$(TARGET)
+	@echo "Testing bandwidth effects..."
+	./$(BINDIR)/$(TARGET) full110 narrow_440
+	./$(BINDIR)/$(TARGET) full110 vowel_a
+	./$(BINDIR)/$(TARGET) full110 wide_1000
+
+# Test different buzz frequencies
+test-frequencies: $(BINDIR)/$(TARGET)
+	@echo "Testing different buzz frequencies..."
+	./$(BINDIR)/$(TARGET) full50 vowel_a
+	./$(BINDIR)/$(TARGET) full110 vowel_a
+	./$(BINDIR)/$(TARGET) full220 vowel_a
+
+# Comprehensive test suite
+test-suite: $(BINDIR)/$(TARGET)
+	@echo "Running comprehensive test suite..."
+	@echo "==================================="
+	@echo "Test 1: Vowel synthesis (full110 buzz)"
+	./$(BINDIR)/$(TARGET) full110 vowel_a
+	./$(BINDIR)/$(TARGET) full110 vowel_e
+	./$(BINDIR)/$(TARGET) full110 vowel_i
+	./$(BINDIR)/$(TARGET) full110 vowel_o
+	./$(BINDIR)/$(TARGET) full110 vowel_u
+	@echo ""
+	@echo "Test 2: Harmonic richness comparison"
+	./$(BINDIR)/$(TARGET) minDull narrow_440
+	./$(BINDIR)/$(TARGET) full110 narrow_440
+	@echo ""
+	@echo "Test 3: Bandwidth effects"
+	./$(BINDIR)/$(TARGET) full110 narrow_440
+	./$(BINDIR)/$(TARGET) full110 wide_1000
+	@echo ""
+	@echo "Test 4: Frequency variations"
+	./$(BINDIR)/$(TARGET) full50 vowel_a
+	./$(BINDIR)/$(TARGET) full110 vowel_a
+	./$(BINDIR)/$(TARGET) full220 vowel_a
+	@echo ""
+	@echo "All tests complete! Check output/ directory"
+
+# Play all generated files
+play-all:
 	@if command -v aplay >/dev/null 2>&1; then \
-		aplay $(OUTPUTDIR)/*.wav 2>/dev/null || true; \
+		for file in $(OUTPUTDIR)/*.wav; do \
+			echo "Playing $$file..."; \
+			aplay $$file; \
+		done; \
 	elif command -v afplay >/dev/null 2>&1; then \
-		afplay $(OUTPUTDIR)/*.wav; \
+		for file in $(OUTPUTDIR)/*.wav; do \
+			echo "Playing $$file..."; \
+			afplay $$file; \
+		done; \
 	else \
-		echo "No audio player found (aplay or afplay)"; \
+		echo "No audio player found"; \
 	fi
 
-# Quick test with default parameters
-test-quick: $(BINDIR)/$(TARGET)
-	@echo "Running quick test with fc=440, BW=50, f_buzz=110..."
-	@echo -e "440\n50\n110\n3\nquick_test.wav" | ./$(BINDIR)/$(TARGET)
+# List generated files
+list-output:
+	@echo "Generated WAV files:"
+	@ls -lh $(OUTPUTDIR)/*.wav 2>/dev/null || echo "No WAV files found"
 
 ################################################################################
 # UTILITY TARGETS
@@ -126,19 +189,26 @@ help:
 	@echo "  make clean          - Remove build artifacts"
 	@echo "  make distclean      - Complete cleanup including WAV files"
 	@echo ""
-	@echo "Test Targets:"
-	@echo "  make test           - Run spectrum shaper (interactive)"
-	@echo "  make test-play      - Run and play generated audio"
-	@echo "  make test-quick     - Quick test with default parameters"
+	@echo "Quick Test Targets:"
+	@echo "  make test-quick     - Single test (full110 + vowel_a)"
+	@echo "  make test-vowels    - Test all vowel formants"
+	@echo ""
+	@echo "Comprehensive Test Targets:"
+	@echo "  make test-suite     - Run complete test suite"
+	@echo "  make test-buzz-variants - Test harmonic richness"
+	@echo "  make test-bandwidth     - Test bandwidth effects"
+	@echo "  make test-frequencies   - Test different buzz frequencies"
+	@echo ""
+	@echo "Playback:"
+	@echo "  make play-all       - Play all generated WAV files"
+	@echo "  make list-output    - List generated files"
 	@echo ""
 	@echo "Usage:"
-	@echo "  ./$(BINDIR)/$(TARGET)"
-	@echo "    Parameters:"
-	@echo "      - Center frequency (Hz): e.g., 440"
-	@echo "      - Bandwidth (Hz): e.g., 50"
-	@echo "      - Buzz frequency (Hz): e.g., 110"
-	@echo "      - Duration (seconds): e.g., 3"
-	@echo "      - Output filename: e.g., output.wav"
+	@echo "  ./$(BINDIR)/$(TARGET) <buzz_preset> <reson_preset>"
+	@echo ""
+	@echo "Buzz Presets: minDull, midDull, maxDull, full110, full220, full50"
+	@echo "Reson Presets: vowel_a, vowel_e, vowel_i, vowel_o, vowel_u,"
+	@echo "               narrow_440, wide_1000"
 	@echo ""
 
 # Show build configuration
@@ -153,4 +223,6 @@ info:
 # PHONY TARGETS
 ################################################################################
 
-.PHONY: all release debug clean distclean mrproper test test-play test-quick help info
+.PHONY: all release debug clean distclean mrproper test-quick test-vowels \
+        test-buzz-variants test-bandwidth test-frequencies test-suite \
+        play-all list-output help info

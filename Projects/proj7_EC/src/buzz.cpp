@@ -11,10 +11,10 @@ void Buzz::generateImpulse()
 
 void Buzz::generateCosines()
 {
-    for(int n = 0; 0 < numSamples_; ++n)
+    for(int n = 0; n < numSamples_; ++n)
     {
         double sum = 0.0;
-        for(int k = 1; k < params_.numHarmonics; ++k)
+        for(int k = 1; k <= params_.numHarmonics; ++k)
         {
             double phase = cos(
                 2 * M_PI* k * params_.buzzFreq * n / sampleRate_

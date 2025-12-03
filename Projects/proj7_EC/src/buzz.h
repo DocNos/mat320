@@ -12,6 +12,12 @@ using namespace std;
  * or by generating an impulse train. It serves as the source signal for
  * spectrum shaping with the reson filter.
  */
+
+enum BuzzType
+{
+    Impulse, Cosine
+};
+
 struct BuzzParams {
     double buzzFreq;
     int numHarmonics;  
@@ -24,9 +30,12 @@ const map<string, BuzzParams> buzzPresets =
     , {"full220", {220, 100}}, {"full50", {50, 441}}
 };
 
+
+
 class Buzz {
 public:
     BuzzParams params_;
+    BuzzType type_;
     double sampleRate_;  
     double numSamples_;
     double period_; 
@@ -35,19 +44,45 @@ public:
 
 
 public:
-    Buzz(string _preset, double _sampleRate, double _numSamples)
-    : params_(buzzPresets.at(_preset))
+    Buzz(double _frequency, double _sampleRate, double _numSamples)
+    : params_({_frequency, 0})
+    , type_(BuzzType::Impulse)
     , numSamples_(_numSamples)
     , sampleRate_(_sampleRate)
     , period_(sampleRate_ / params_.buzzFreq)
     , output_(numSamples_)
-    {}
+    {
+        generateImpulse();
+    }
+
+    Buzz(string _preset, double _sampleRate, double _numSamples)
+    : params_(buzzPresets.at(_preset))
+    , type_(BuzzType::Cosine)
+    , numSamples_(_numSamples)
+    , sampleRate_(_sampleRate)
+    , period_(sampleRate_ / params_.buzzFreq)
+    , output_(numSamples_)
+    {
+        generateCosines();
+    }
 
     void generateImpulse();
 
     // Period determined by buzz frequency
     // buzz[n] = (1/K) * Σ cos(2π * k * f_buzz * n / fs) for k=1 to K
     void generateCosines();
+
+    void Reset()
+    {
+        output_.clear();
+    }
+
+    void Reset(BuzzType type)
+    {
+        output_.clear();
+        if(type == BuzzType::Cosine) generateCosines();
+        else generateImpulse();
+    }
 };
 
 #endif // BUZZ_GENERATOR_H

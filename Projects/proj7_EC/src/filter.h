@@ -36,7 +36,7 @@ struct FilterParams
     //--------------- Timing
     unsigned sampleRate = 44100;
     unsigned duration = 8;
-    unsigned numSamples = sampleRate / duration;
+    unsigned numSamples = sampleRate * duration;
     double r_val = r_vals.at("rhythm");
     unsigned numNotes = duration;
     float noteDuration = 1;
@@ -110,6 +110,12 @@ inline WavHeader createHeader(Filter filter)
 class Filter
 {
 public:
+    Filter()
+    : baseParams_()
+    {
+        header_ = createHeader(this);
+    }
+
     Filter(FilterParams _params)
     : baseParams_(_params)
     {
@@ -154,13 +160,25 @@ public:
     double y_n2;        // y[n-2] - output two samples ago
 
 public:
-    ResonFilter(FilterParams _params)
-    : Filter(_params)
-    , buzz_("full110"
+
+    ResonFilter(string _buzzPreset, string _resonPreset)
+    : Filter()
+    , buzz_(_buzzPreset
         , baseParams_.sampleRate, baseParams_.numSamples)
+    , y_n1(0.0), y_n2(0.0)
     {
-        calcParameters("vowel_a");
-        buzz_.generateCosines();
+        calcParameters(_resonPreset);
+        output_ = buzz_.output_;
+    }
+
+    ResonFilter(FilterParams _params
+    , string _buzzPreset, string _resonPreset)
+    : Filter(_params)
+    , buzz_(_buzzPreset
+        , baseParams_.sampleRate, baseParams_.numSamples)
+    , y_n1(0.0), y_n2(0.0)
+    {
+        calcParameters(_resonPreset);
         output_ = buzz_.output_;
     }
 // ----------------------- Processing
@@ -173,11 +191,13 @@ public:
 */
     //y[n] = gain * x[n] + a1 * y[n-1] - a2 * y[n-2]
     void Execute();
+
+    void Write(string);
+
+private:
     double ExecuteSingle(int index);
 
-    void Reset();
-
-
+    vector<int16_t> Normalize();
 
 // ----------------------- Parameter Setup
     void calcParameters(string);
