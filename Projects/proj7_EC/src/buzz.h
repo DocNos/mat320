@@ -85,6 +85,12 @@ public:
     }
 };
 
+inline bool FindBuzz(string preset)
+{
+    return(buzzPresets.find(preset) != buzzPresets.end());
+}
+
+
 #endif // BUZZ_GENERATOR_H
 
 /*

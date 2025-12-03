@@ -228,7 +228,10 @@ private:
     }
 };
 
-
+inline bool FindReson(string preset)
+{
+    return (ResonPresets.find(preset) != ResonPresets.end());
+}
 
 
 inline vector<float> CreateSemitones
