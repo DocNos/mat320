@@ -6,6 +6,7 @@
 #include <tuple>
 #include <cmath>
 #include "wav.h"
+#include "buzz.h"
 using namespace std;
 
 enum Scale
@@ -35,6 +36,7 @@ struct FilterParams
     //--------------- Timing
     unsigned sampleRate = 44100;
     unsigned duration = 8;
+    unsigned numSamples = sampleRate / duration;
     double r_val = r_vals.at("rhythm");
     unsigned numNotes = duration;
     float noteDuration = 1;
@@ -64,12 +66,13 @@ struct PluckParams
 
 struct ResonParams
 {
+    double centerFrequency; // Which frequency to emphasize
     double R;           // Pole radius
     double theta;       // Pole angle
     double coeff_a1;    // 2*R*cos(theta)
     double coeff_a2;    // R*R
     double gain;        // 1 - R*R
-    double bandwidth_;
+    double bandwidth;
 };
 
 inline WavHeader createHeader(Filter filter)
@@ -146,19 +149,18 @@ class ResonFilter : public Filter
 public:
     ResonParams params_;
     vector<double> output_;
+    Buzz buzz_;
     double y_n1;        // y[n-1] - previous output
     double y_n2;        // y[n-2] - output two samples ago
 
 public:
-/* TODO:
-    - Size from header, output sample size
-    - incorporate buzz
-    
-*/  
     ResonFilter(FilterParams _params)
-    : Filter(_params), output_()
+    : Filter(_params), output_(baseParams_.numSamples)
+    , buzz_("full110"
+        , baseParams_.sampleRate, baseParams_.numSamples)
     {
         calcParameters("vowel_a");
+        buzz_.generateCosines();
     }
 // ----------------------- Processing
 /*
@@ -168,6 +170,7 @@ public:
    c. Store y[n] in output buffer
  Normalize output to prevent clipping
 */
+    void Execute();
     void Reset();
 
 

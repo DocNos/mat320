@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cmath>
+#include <map>
 using namespace std;
 /**
  * BuzzGenerator - Generates a digital buzz signal (periodic impulse train)
@@ -11,41 +12,61 @@ using namespace std;
  * or by generating an impulse train. It serves as the source signal for
  * spectrum shaping with the reson filter.
  */
+struct BuzzParams {
+    double buzzFreq;
+    int numHarmonics;  
+};
+
+const map<string, BuzzParams> buzzPresets = 
+{
+    {"minDull", {110, 5}}, {"midDull", {110, 10}}
+    , {"maxDull", {110, 50}}, {"full110", {110, 200}}
+    , {"full220", {220, 100}}, {"full50", {50, 441}}
+};
+
 class Buzz {
-private:
-    double sampleRate;
-    double frequency;
-    int numHarmonics;
-    double period;
+public:
+    BuzzParams params_;
+    double sampleRate_;  
+    double numSamples_;
+    double period_; 
+
 
 public:
-    Buzz(double freq, double sr);
+    Buzz(string _preset, double _sampleRate, double _numSamples)
+    : params_(buzzPresets.at(_preset))
+    , numSamples_(_numSamples)
+    , sampleRate_(_sampleRate)
+    , period_(sampleRate_ / params_.buzzFreq)
+    {}
 
-    /**
-     * Generate buzz signal samples
-     * @param numSamples Number of samples to generate
-     * @return Vector of buzz signal samples in range [-1.0, 1.0]
-     */
-    std::vector<double> generate(int numSamples);
+    vector<double> generateImpulse();
 
-    /**
-     * Generate a single buzz sample at time n
-     * @param n Sample index
-     * @return Buzz sample value
-     */
-    double generateSample(int n);
-
-    /**
-     * Set the buzz frequency
-     * @param freq New frequency in Hz
-     */
-    void setFrequency(double freq);
-
-    /**
-     * Get the current buzz frequency
-     * @return Frequency in Hz
-     */
-    double getFrequency() const;
+    // Period determined by buzz frequency
+    // buzz[n] = (1/K) * Σ cos(2π * k * f_buzz * n / fs) for k=1 to K
+    vector<double> generateCosines();
 };
 
 #endif // BUZZ_GENERATOR_H
+
+/*
+50 Hz	882 samples	    Very low, like a bass rumble
+110 Hz	401 samples	    Low A, common for vocal formants
+220 Hz	200.5 samples	A3, male voice fundamental
+440 Hz	100.2 samples	A4, female voice fundamental
+*/
+
+/*
+This determines how rich/bright vs dull/simple 
+the source signal is:
+# Harmonics	Calculation	Effect on Sound
+5-10	    Manually limited	
+    Very dull, almost sine-wave-like. 
+    Few harmonics for filter to pick from
+20-50	    Manually limited	
+    Darker, warmer buzz. Limited harmonic content
+100-200	    floor(44100/(2*110)) = 200 for 110 Hz	
+    Full, rich buzz. Many harmonics for filter to emphasize
+Max safe	floor(SR / (2*freq))	
+    Brightest possible without aliasing
+*/
