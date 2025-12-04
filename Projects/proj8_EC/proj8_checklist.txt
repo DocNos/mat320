@@ -2,8 +2,6 @@
 # Implementation Checklist for Claude
 
 ## PROJECT OVERVIEW
-- Type: Extra Credit (2% max toward course grade)
-- Due: Monday, December 1
 - Language: Python
 - Framework: TensorFlow
 - Core Task: Train speech recognition NN, control turtle with voice commands
