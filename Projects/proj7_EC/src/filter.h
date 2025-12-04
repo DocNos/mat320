@@ -46,9 +46,9 @@ struct FilterParams
     Scale scale = Scale::Major;
 
     //--------------- Data Organization
-    unsigned bitsPerSample = 16;
+    uint16_t bitsPerSample = 16;
     unsigned numRand_Samples = 10;
-    unsigned numChannels = 1;
+    uint16_t numChannels = 1;
     int clampRange = 15000; 
 
 };
@@ -75,12 +75,33 @@ struct ResonParams
     double bandwidth;
 };
 
-inline WavHeader createHeader(Filter filter)
+class Filter;
+
+
+
+class Filter
 {
-    FilterParams params = filter.baseParams_;
+public:
+    Filter()
+    : baseParams_()
+    {
+        header_ = createHeader();
+    }
+
+    Filter(FilterParams _params)
+    : baseParams_(_params)
+    {
+        header_ = createHeader();
+    }
+    FilterParams baseParams_;
+    WavHeader header_;
+
+    WavHeader createHeader()
+{
+    FilterParams params = baseParams_;
     unsigned audioDuration = params.duration;
     unsigned sampleRate = params.sampleRate;
-    unsigned bitsSample = params.bitsPerSample;
+    uint16_t bitsSample = params.bitsPerSample;
 
     unsigned headerSize = sizeof(WavHeader) 
         - (sizeof(WavHeader::chunkID) + sizeof(WavHeader::chunkSize));
@@ -107,22 +128,6 @@ inline WavHeader createHeader(Filter filter)
     return header;
 }
 
-class Filter
-{
-public:
-    Filter()
-    : baseParams_()
-    {
-        header_ = createHeader(this);
-    }
-
-    Filter(FilterParams _params)
-    : baseParams_(_params)
-    {
-        header_ = createHeader(this);
-    }
-    FilterParams baseParams_;
-    WavHeader header_;
     
 
 };
@@ -294,6 +299,8 @@ inline PluckParams calculateParameters
     };
     return params;
 }
+
+
 
 #endif
 

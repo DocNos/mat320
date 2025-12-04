@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <map>
+#include <string>
 using namespace std;
 /**
  * BuzzGenerator - Generates a digital buzz signal (periodic impulse train)
@@ -35,9 +36,9 @@ const map<string, BuzzParams> buzzPresets =
 class Buzz {
 public:
     BuzzParams params_;
-    BuzzType type_;
-    double sampleRate_;  
+    BuzzType type_; 
     double numSamples_;
+    double sampleRate_; 
     double period_; 
 
     vector<double> output_;

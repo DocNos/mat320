@@ -2,7 +2,7 @@
 
 void ResonFilter::Execute()
 {
-    for(int i = 2; i < baseParams_.numSamples; ++i)
+    for(unsigned i = 2; i < baseParams_.numSamples; ++i)
     {
         output_[i] = ExecuteSingle(i);
     }
@@ -35,7 +35,8 @@ vector<int16_t> ResonFilter::Normalize()
         maxVal = max(abs(sample), maxVal);
     }
     vector<int16_t> converted(output_.size());
-    for(int i = 0; i < output_.size(); ++i)
+    int size = static_cast<int>(output_.size());
+    for(int i = 0; i < size; ++i)
     {
         double normalized = (maxVal > 1.0) 
             ? (output_[i] / maxVal) : (output_[i]);
