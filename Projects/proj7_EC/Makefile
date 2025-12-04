@@ -58,7 +58,7 @@ debug: CXXFLAGS += $(DEBUGFLAGS)
 debug: clean all
 
 # Linking
-$(BINDIR)/$(TARGET): $(OBJECTS) | $(BINDIR) $(OUTPUTDIR) $(INPUTDIR) $(TESTDIR) $(DOCDIR)
+$(BINDIR)/$(TARGET): $(OBJECTS) | $(BINDIR) $(OUTPUTDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Compilation pattern
@@ -66,25 +66,24 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS) | $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Directory creation
-$(BINDIR) $(OBJDIR) $(OUTPUTDIR) $(INPUTDIR) $(TESTDIR) $(DOCDIR):
+$(BINDIR) $(OBJDIR) $(OUTPUTDIR):
 	@mkdir -p $@
 
 ################################################################################
 # CLEAN TARGETS
 ################################################################################
 
-# Remove build artifacts
+# Remove build artifacts only
 clean:
 	$(RM) -r $(OBJDIR)
 	$(RM) -r $(BINDIR)
 
-# Full cleanup including generated files
+# Full cleanup including all generated files and directories
 distclean: clean
-	$(RM) -r $(OUTPUTDIR)/*.wav
+	$(RM) -r $(OUTPUTDIR)
 
-# Nuclear option - reset to pristine state
+# Nuclear option - complete reset to pristine state (same as distclean)
 mrproper: distclean
-	$(RM) -r $(OBJDIR) $(BINDIR)
 
 ################################################################################
 # TEST TARGETS WITH PRESETS
