@@ -354,7 +354,187 @@ ifeq ($(UNAME_S),Darwin)
 endif
 ```
 
-## 10. Universal Best Practices
+## 10. Pragmatic Directory Management
+
+### Only Create Directories Actually Used:
+The universal directory structure (Section 1) provides a **complete template**, but projects should only create directories they actually need.
+
+**Best Practice:**
+```makefile
+# BAD - Creating all directories unconditionally
+$(BINDIR) $(OBJDIR) $(INPUTDIR) $(OUTPUTDIR) $(TESTDIR) $(DOCDIR):
+	@mkdir -p $@
+
+# GOOD - Only create directories used by this project
+$(BINDIR) $(OBJDIR) $(OUTPUTDIR):
+	@mkdir -p $@
+```
+
+### Directory Creation Guidelines:
+- **bin/**: Always created if building executables
+- **obj/**: Always created if compiling (C/C++/Rust/etc.)
+- **output/**: Create only if generating output files (WAV, images, results, etc.)
+- **input/**: Create only if project requires test input files
+- **tests/**: Create only if writing automated test code
+- **docs/**: Usually **pre-existing** (specs, assignments), don't auto-generate unless needed
+- **scripts/**: Create only if project includes automation scripts
+- **lib/**: Create only if building/linking libraries
+
+### Common Scenarios:
+```makefile
+# Simple executable project (no output files)
+$(BINDIR) $(OBJDIR):
+	@mkdir -p $@
+
+# Project generating files (audio, images, data)
+$(BINDIR) $(OBJDIR) $(OUTPUTDIR):
+	@mkdir -p $@
+
+# Project with test suite
+$(BINDIR) $(OBJDIR) $(TESTDIR):
+	@mkdir -p $@
+
+# Library project
+$(LIBDIR) $(OBJDIR) $(INCDIR):
+	@mkdir -p $@
+```
+
+**Rationale:** Unnecessary directory creation clutters the workspace and suggests functionality that doesn't exist.
+
+## 11. C++ Version Compatibility Management
+
+### Always Check C++ Standard Version:
+Different C++ standards have different features. Always verify which standard your project uses before using version-specific features.
+
+**How to Check:**
+```makefile
+# In Makefile - look for CXXFLAGS
+CXXFLAGS = -Wall -Wextra -std=c++17  # This project uses C++17
+```
+
+### Common Version Differences:
+
+| Feature | C++17 | C++20 | Usage |
+|---------|-------|-------|-------|
+| `std::map::contains()` | ❌ No | ✅ Yes | Use `count()` or `find()` for C++17 |
+| `std::numbers::pi` | ❌ No | ✅ Yes | Use `M_PI` from `<cmath>` for C++17 |
+| `std::format` | ❌ No | ✅ Yes | Use `printf` or streams for C++17 |
+| Designated initializers | Partial | ✅ Full | Limited in C++17 |
+
+### C++17 Compatible Patterns:
+
+```cpp
+// Checking if map key exists (C++17)
+// BAD - C++20 only
+if (myMap.contains("key")) { }
+
+// GOOD - C++17 compatible options
+if (myMap.count("key") > 0) { }                    // Option 1: count()
+if (myMap.find("key") != myMap.end()) { }          // Option 2: find()
+
+// Accessing π (C++17)
+// BAD - C++20 only
+#include <numbers>
+double pi = std::numbers::pi;
+
+// GOOD - C++17 compatible
+#define _USE_MATH_DEFINES  // Must be BEFORE #include <cmath>
+#include <cmath>
+double pi = M_PI;
+```
+
+### Validation Helper Functions:
+```cpp
+// Inline validation for preset maps (C++17)
+inline bool FindPreset(const std::map<std::string, PresetType>& presets,
+                       const std::string& key) {
+    return presets.find(key) != presets.end();
+}
+
+// Usage in main
+if (!FindPreset(buzzPresets, argv[1])) {
+    std::cerr << "Unknown preset: " << argv[1] << std::endl;
+    return 1;
+}
+```
+
+**Best Practice:** Document C++ version requirements in README and verify compatibility before using modern features.
+
+## 12. Preset-Based Design Patterns (DSP/Audio Projects)
+
+### Map-Based Preset System:
+For projects with multiple parameter configurations (audio synthesis, signal processing, simulations), use a map-based preset system.
+
+**Pattern:**
+```cpp
+// Define parameter structure
+struct FilterParams {
+    double centerFrequency;
+    double bandwidth;
+};
+
+// Create preset map with descriptive string keys
+const std::map<std::string, FilterParams> FilterPresets = {
+    {"vowel_a", {730, 50}},      // Descriptive, domain-specific names
+    {"vowel_e", {530, 50}},
+    {"narrow_440", {440, 20}},   // Technical parameter names
+    {"wide_1000", {1000, 200}},
+};
+
+// Usage
+std::string preset = argv[1];
+if (FilterPresets.find(preset) == FilterPresets.end()) {
+    std::cerr << "Unknown preset: " << preset << std::endl;
+    return 1;
+}
+FilterParams params = FilterPresets.at(preset);
+```
+
+### Benefits:
+- **User-friendly**: String keys are more intuitive than numeric indices
+- **Self-documenting**: Preset names describe their purpose
+- **Type-safe**: Compiler validates parameter structures
+- **Extensible**: Easy to add new presets without changing code logic
+
+### Multiple Preset Types:
+When a project has multiple parameter categories (e.g., source + filter), maintain separate preset maps:
+
+```cpp
+// Separate preset maps for different components
+const std::map<std::string, BuzzParams> BuzzPresets = {
+    {"minDull", {110, 5}},
+    {"full110", {110, 200}},
+};
+
+const std::map<std::string, ResonParams> ResonPresets = {
+    {"vowel_a", {730, 50}},
+    {"narrow_440", {440, 20}},
+};
+
+// Usage with two command-line arguments
+BuzzGenerator buzz(BuzzPresets.at(argv[1]));
+ResonFilter filter(ResonPresets.at(argv[2]));
+```
+
+**Important:** Keep source parameters (buzz frequency, harmonics) separate from processing parameters (filter center frequency, bandwidth). These are independent and serve different purposes.
+
+### Makefile Test Targets for Presets:
+```makefile
+# Test specific preset combinations
+test-vowels: $(BINDIR)/$(TARGET)
+	@echo "Testing vowel formants..."
+	./$(BINDIR)/$(TARGET) full110 vowel_a
+	./$(BINDIR)/$(TARGET) full110 vowel_e
+	./$(BINDIR)/$(TARGET) full110 vowel_i
+
+# Test parameter variations
+test-bandwidth: $(BINDIR)/$(TARGET)
+	@echo "Testing bandwidth variations..."
+	./$(BINDIR)/$(TARGET) full110 narrow_440
+	./$(BINDIR)/$(TARGET) full110 wide_1000
+```
+
+## 13. Universal Best Practices
 
 ### Always Include:
 - Clear section headers with separators
@@ -366,10 +546,12 @@ endif
 
 ### Never Do:
 - Hard-code absolute paths
-- Use spaces in target names  
+- Use spaces in target names
 - Forget to declare phony targets
 - Skip error handling for file operations
 - Mix different naming conventions in same project
+- Create directories that won't be used by the project
+- Use C++20 features in C++17 projects without checking
 
 ### Documentation Standards:
 ```makefile

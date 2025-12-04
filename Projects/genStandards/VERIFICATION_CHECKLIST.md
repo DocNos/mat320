@@ -137,6 +137,15 @@ generate-output:
 - Sum of all N-th roots of unity = 0 (except for N=1)
 - Geometric series: Σ r^k = (1-r^N)/(1-r) for r≠1
 
+### DSP/Signal Processing:
+- **Distinguish source vs filter parameters**: Source frequency (buzz/oscillator) ≠ filter center frequency
+  - Source: Creates harmonics at fundamental and multiples (f, 2f, 3f, ...)
+  - Filter: Emphasizes specific frequency band from those harmonics
+  - Example: 110 Hz buzz creates harmonics up to Nyquist; 730 Hz reson emphasizes the 730 Hz region
+- **Sample rate considerations**: Maximum frequency = sample_rate / 2 (Nyquist limit)
+- **Period calculation**: period_samples = sample_rate / frequency
+- **Coefficient calculations**: Verify angle units (radians), exponential arguments, trigonometric identities
+
 ## 6. Emergency Recovery Process:
 
 If errors are discovered in expected outputs:
