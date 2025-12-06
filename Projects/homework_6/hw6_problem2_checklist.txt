@@ -1,0 +1,189 @@
+MAT 320 HOMEWORK 6 - PROBLEM 2 IMPLEMENTATION CHECKLIST
+=========================================================
+
+OBJECTIVE: Reproduce Figure 5.1 and analyze harmonic discrepancies in plucked-string filter
+
+====================
+PART A - REPRODUCE GRAPH FROM PAGE 112
+====================
+
+□ Environment Setup
+  □ Import numpy for numerical computation
+  □ Import matplotlib for plotting
+  □ Import scipy.signal for peak detection (optional)
+
+□ Define System Parameters
+  □ Set loop delay length L = 32
+  □ Set pole radius coefficient R = 0.999
+  □ Define sample rate fs = 44100 (for later calculations)
+
+□ Create Frequency Grid
+  □ Generate omega values: 0 to π radians/sample
+  □ Create corresponding normalized frequency array (0 to 0.5)
+  □ Ensure sufficient resolution for smooth plot
+
+□ Implement Transfer Function Components (Formulas 5.6)
+  
+  □ Calculate numerator components:
+    □ Real part: cos((L+1)ω) + cos(Lω)
+    □ Imaginary part: sin((L+1)ω) + sin(Lω)
+  
+  □ Calculate denominator components:
+    □ Real part: 2cos((L+0.5)ω) - R·cos(ω) - R^L
+    □ Imaginary part: 2sin((L+0.5)ω) - R·sin(ω)
+
+□ Compute Magnitude Response (Formula 5.7)
+  □ Calculate numerator magnitude squared
+  □ Calculate denominator magnitude squared
+  □ Take square root of the ratio
+  □ Convert to dB scale: 20·log10(magnitude)
+
+□ Plot Generation
+  □ Create figure with appropriate size
+  □ Plot magnitude response vs normalized frequency
+  □ Set y-axis range: -20 to 50 dB
+  □ Set x-axis range: 0 to 0.5
+  □ Add grid for readability
+  □ Label axes appropriately
+
+□ Add Expected Resonance Markers
+  □ Calculate resonance positions: multiples of 1/32.5
+  □ Mark with triangular markers as shown in figure
+  □ Include at least first 15 harmonics
+
+□ Verify Visual Match
+  □ Peaks align with triangular markers
+  □ Peak widths increase with frequency
+  □ Overall shape matches reference figure
+
+====================
+PART B - VERIFY 10TH HARMONIC DISCREPANCY
+====================
+
+□ Peak Detection Strategy
+  □ Choose method: scipy.signal.find_peaks() or manual search
+  □ Set appropriate prominence/height thresholds
+  □ Store peak frequencies and amplitudes
+
+□ Identify Key Harmonics
+  □ Locate first harmonic peak position
+  □ Locate tenth harmonic peak position
+  □ Record normalized frequency values
+
+□ Calculate Discrepancy
+  □ Expected position: 10 × (first harmonic frequency)
+  □ Actual position: measured tenth harmonic frequency
+  □ Percentage error calculation:
+    □ error = 100 × (actual - expected) / expected
+  □ Verify result ≈ 0.027%
+
+====================
+PART C - CONVERT DISCREPANCY TO HZ
+====================
+
+□ Frequency Conversion
+  □ Take normalized frequency discrepancy from part B
+  □ Multiply by sample rate (44100 Hz)
+  □ Report absolute frequency difference in Hz
+
+====================
+PART D - EXPRESS AS FREQUENCY RATIO
+====================
+
+□ Ratio Calculation
+  □ Compute actual_freq / expected_freq
+  □ Express as decimal (should be close to 1.0)
+  □ Note: ratio > 1 means sharp, ratio < 1 means flat
+
+====================
+PART E - CONVERT TO CENTS
+====================
+
+□ Implement Cents Formula
+  □ Formula: cents = (1200/ln(2)) × ln(frequency_ratio)
+  □ Apply to ratio from part D
+  □ Verify result is small (within typical tuning tolerance)
+
+====================
+VALIDATION CHECKLIST
+====================
+
+□ Mathematical Verification
+  □ Confirm transfer function implementation matches equations
+  □ Check unit conversions are correct
+  □ Verify logarithmic calculations
+
+□ Sanity Checks
+  □ All peaks should be positive in dB
+  □ Discrepancy should be small but measurable
+  □ Cents value should be less than a semitone (100 cents)
+
+□ Cross-Reference Checks
+  □ Compare with Karplus-Strong theory
+  □ Verify behavior matches lowpass filter effects
+  □ Confirm higher harmonics show more detuning
+
+====================
+CODE ORGANIZATION RECOMMENDATIONS
+====================
+
+□ Function Structure
+  □ Separate function for frequency response calculation
+  □ Separate function for peak detection
+  □ Separate function for discrepancy analysis
+  □ Main script to orchestrate and display results
+
+□ Output Formatting
+  □ Clear section headers for each part
+  □ Formatted numerical output with appropriate precision
+  □ Summary table of all calculated values
+
+□ Documentation
+  □ Comment formula references (5.6, 5.7)
+  □ Explain physical significance of parameters
+  □ Note any assumptions or approximations
+
+====================
+DEBUGGING TIPS
+====================
+
+□ Common Issues to Check
+  □ Omega in radians vs normalized frequency confusion
+  □ Array indexing for peak detection
+  □ Log base differences (log10 vs natural log)
+  □ Sign conventions in transfer function
+
+□ Verification Points
+  □ First harmonic should be near 1/32.5 ≈ 0.0308
+  □ Magnitude at DC should be finite
+  □ No NaN or infinity values in calculations
+
+====================
+DELIVERABLES
+====================
+
+□ Graph matching Figure 5.1
+□ Verification of 0.027% discrepancy
+□ Discrepancy in Hz (part c)
+□ Frequency ratio (part d)
+□ Discrepancy in cents (part e)
+□ Clean, commented code
+□ Written explanations of results
+
+====================
+NOTES
+====================
+
+- The discrepancy arises from the lowpass filter in the feedback loop
+- Higher harmonics decay faster (wider peaks in frequency response)
+- The slight detuning is characteristic of the Karplus-Strong algorithm
+- This matches real string behavior where stiffness causes inharmonicity
+
+====================
+SUBMISSION REQUIREMENTS
+====================
+
+□ Include all numerical results with appropriate precision
+□ Provide graph as high-quality image
+□ Show calculation steps for each part
+□ Reference equation numbers from textbook

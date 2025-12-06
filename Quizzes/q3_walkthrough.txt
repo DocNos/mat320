@@ -1,0 +1,90 @@
+Looking at this MAT 320 Quiz 3 on digital filters, I'll walk you through each question step by step.
+
+## Questions 1-6: Filter F1 Analysis
+
+The filter is defined as: **yt = xt - (1/4)yt-1**
+
+### Question 1: Transfer Function H(z)
+To find H(z), I'll take the Z-transform:
+- Starting with: yt + (1/4)yt-1 = xt
+- Z-transform gives: Y(z) + (1/4)z⁻¹Y(z) = X(z)
+- Factor out Y(z): Y(z)[1 + (1/4)z⁻¹] = X(z)
+- Therefore: H(z) = Y(z)/X(z) = 1/[1 + (1/4)z⁻¹]
+- Multiply top and bottom by z: **H(z) = z/(z + 1/4)**
+
+**Answer: b) z/(z + 1/4)**
+
+### Question 2: Pole Location
+The pole occurs when the denominator equals zero:
+- z + 1/4 = 0
+- z = -1/4
+
+**Answer: a) -1/4**
+
+### Question 3: Frequency Response at ω = 0
+H(ω) = H(e^(iω)). At ω = 0:
+- H(0) = H(1) = 1/(1 + 1/4) = 1/(5/4) = 4/5
+
+**Answer: b) 4/5**
+
+### Question 4: Magnitude Response at ω = π/2
+At ω = π/2, e^(iπ/2) = i:
+- H(i) = i/(i + 1/4)
+- |H(i)| = |i|/|i + 1/4| = 1/√((1/4)² + 1²)
+- = 1/√(1/16 + 1) = 1/√(17/16) = √(16/17)
+
+**Answer: e) √(16/17)**
+
+### Question 5: Frequency with Smallest Response
+The magnitude |H(e^(iω))| = 1/|e^(iω) + 1/4| is minimized when |e^(iω) + 1/4| is maximized. This represents the distance from the point -1/4 to points on the unit circle. Through geometric analysis or calculation, this maximum distance occurs at ω = π/3.
+
+**Answer: c) π/3**
+
+### Question 6: Unit Impulse Response y₂
+With input x = (1, 0, 0, 0, ...) and zero initial conditions:
+- y₀ = 1 - (1/4)(0) = 1
+- y₁ = 0 - (1/4)(1) = -1/4
+- y₂ = 0 - (1/4)(-1/4) = 1/16
+
+**Answer: e) 1/16**
+
+## Questions 7-10: Reson Filter Analysis
+
+The reson filter has poles at **Re^(±iθ)** with **θ = π/4** and **R = 1-ε** (ε small).
+
+### Question 7: Output y₂ for Unit Impulse
+For a reson filter, the difference equation is:
+yt = xt + 2Rcos(θ)yt-1 - R²yt-2
+
+With θ = π/4, cos(θ) = √2/2:
+- y₀ = 1
+- y₁ = 0 + √2R(1) - 0 = √2R
+- y₂ = 0 + √2R(√2R) - R²(1) = 2R² - R² = R²
+
+**Answer: e) R²**
+
+### Question 8: Half-Power Bandwidth
+For a reson filter with R = 1-ε close to 1, the approximate half-power bandwidth is:
+B ≈ 2(1-R) = 2ε
+
+**Answer: d) 2ε**
+
+### Question 9: Maximum Magnitude Response
+For a normalized reson filter with poles at Re^(±iθ), the maximum magnitude response (before normalization) is approximately:
+|H(ω)|max ≈ 1/[(1-R²)sin(θ)]
+
+With θ = π/4, sin(θ) = √2/2:
+|H(ω)|max = √2/(1-R²)
+
+**Answer: b) √2/(1-R²)**
+
+### Question 10: Cosine of ωm
+The frequency ωm where the magnitude response peaks satisfies:
+cos(ωm) = (1+R²)/(2R) × cos(θ)
+
+With cos(θ) = √2/2:
+cos(ωm) = (1+R²)/(2√2R)
+
+**Answer: c) (1+R²)/(2√2R)**
+
+These problems test understanding of digital filter analysis, including transfer functions, pole-zero analysis, frequency response, and the special properties of reson filters used for narrow-band filtering.
