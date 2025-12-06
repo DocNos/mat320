@@ -58,7 +58,7 @@ def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
             real_n = np.cos((L + 1)* omega) + np.cos(L*omega)
             numerator_r.append(real_n)
             
-            real_d = 2*np.cos( (L + 0.5)* omega) - R*np.cos(omega) - pow(R, L)
+            real_d = 2*np.cos( (L + 0.5)* omega) - R*np.cos(omega) - (R ** L)
             denom_r.append(real_d)
             
             imag_n = np.sin((L+1)* omega) + np.sin(L*omega)
@@ -97,19 +97,26 @@ def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
     decibels = np.array(MagnitudeResponse(transferRes))
     
     def ResonanceMarkers(harmonics, lVal):
+        """
+        Calculate normalized frequency values (x-axis)
+        returns: expected omegas in [0, π]
+        """
         lRatio = lVal + 0.5
         expected = np.arange(1, harmonics+1) / lRatio
         omegaExpected = []
         for omega in expected:
-            omegaExpected.append(omega * np.pi)
+            # print(omega * 2 * np.pi)
+            omegaExpected.append(omega * 2* np.pi)
         return omegaExpected
-    expected = np.array(ResonanceMarkers(numHarmonix, L_Val))
+    expectedRads = np.array(ResonanceMarkers(numHarmonix, L_Val))
+
     
     def ExpectedMagnitude(frequencyArray, decibelArray, expectedOmega):
         markerMag = []
         for omega in expectedOmega:
             closest = np.argmin(np.abs(frequencyArray - omega))
-            markerMag.append(decibelArray[closest])
+            yVal = decibelArray[closest]
+            markerMag.append(yVal)
         return markerMag
     
     def Plot(omegaArray, normalizedFreq, decibelMag, expectedOmega):
@@ -133,14 +140,15 @@ def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
         plt.xlim(-0.025, 0.5)
         plt.xlabel("Frequency, fractions of sample rate")
 
-        magOmegas = ExpectedMagnitude(omegaArray, decibelMag, expectedOmega)
+        magOmegas = np.array(ExpectedMagnitude(omegaArray, decibelMag, expectedOmega))
+        # print(magOmegas)
         plt.plot(expectedOmega / (2 * np.pi), magOmegas, 'v', markersize=8, color='red')
         
         plt.title("Plucked String Filter Response")
         plt.grid(True)
         os.makedirs('../output', exist_ok=True)
         plt.savefig('../output/pluckedString.png')
-    Plot(frequencyArray,normalOmega, decibels, expected)
+    Plot(frequencyArray,normalOmega, decibels, expectedRads)
 
 
 
