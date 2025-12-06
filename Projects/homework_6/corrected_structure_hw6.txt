@@ -1,0 +1,96 @@
+CORRECTED STRUCTURE FOR RESONANCE_PLUCKEDSTRING FUNCTION
+=========================================================
+
+def Resonance_PluckedString(L_Val, R_Val, sampleRate):
+    """
+    L_Val: Loop delay length (32)
+    R_Val: Pole radius (0.999)
+    sampleRate: Not actually used in frequency response calculation!
+    """
+    
+    # STEP 1: CREATE FREQUENCY GRID
+    # -----------------------------
+    # Generate omega from 0 to π radians/sample
+    num_points = 2000  # Sufficient resolution for smooth plot
+    omega = np.linspace(0, np.pi, num_points)
+    
+    # STEP 2: CALCULATE TRANSFER FUNCTION COMPONENTS
+    # -----------------------------------------------
+    # Using formulas 5.6 from page 112
+    # IMPORTANT: omega is in radians here, NOT normalized frequency
+    
+    # Numerator components (Real and Imaginary)
+    real_numerator = np.cos((L_Val + 1) * omega) + np.cos(L_Val * omega)
+    imag_numerator = np.sin((L_Val + 1) * omega) + np.sin(L_Val * omega)
+    
+    # Denominator components (Real and Imaginary)
+    real_denominator = 2*np.cos((L_Val + 0.5) * omega) - R_Val*np.cos(omega) - R_Val**L_Val
+    imag_denominator = 2*np.sin((L_Val + 0.5) * omega) - R_Val*np.sin(omega)
+    
+    # STEP 3: CALCULATE MAGNITUDE RESPONSE
+    # ------------------------------------
+    # Using formula 5.7 from page 112
+    numerator_mag_squared = real_numerator**2 + imag_numerator**2
+    denominator_mag_squared = real_denominator**2 + imag_denominator**2
+    
+    # Magnitude and convert to dB
+    magnitude = np.sqrt(numerator_mag_squared / denominator_mag_squared)
+    magnitude_dB = 20 * np.log10(magnitude)
+    
+    # STEP 4: CONVERT OMEGA TO NORMALIZED FREQUENCY FOR PLOTTING
+    # ----------------------------------------------------------
+    # This is for the x-axis only!
+    normalized_frequency = omega / (2 * np.pi)
+    
+    # STEP 5: CREATE PLOT
+    # -------------------
+    plt.figure(figsize=(10, 6))
+    plt.plot(normalized_frequency, magnitude_dB, 'b-', linewidth=1)
+    
+    # STEP 6: ADD EXPECTED RESONANCE MARKERS
+    # --------------------------------------
+    # Resonances expected at integer multiples of fs/(L+0.5)
+    # In normalized frequency: k/32.5 for k = 1, 2, 3, ...
+    num_harmonics = 16
+    expected_resonances = np.arange(1, num_harmonics + 1) / 32.5
+    
+    # Find magnitude at these frequencies (for marker height)
+    # Convert expected frequencies back to omega for calculation
+    expected_omega = expected_resonances * 2 * np.pi
+    # ... calculate magnitude at these points ...
+    # Plot markers
+    plt.plot(expected_resonances, marker_heights, 'v', markersize=8, color='black')
+    
+    # STEP 7: FORMAT PLOT
+    # -------------------
+    plt.xlim(0, 0.5)
+    plt.ylim(-20, 50)
+    plt.xlabel('Frequency, fractions of sampling rate')
+    plt.ylabel('Magnitude response, dB')
+    plt.title('Magnitude response of a plucked-string filter')
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+PARTS B-E: HARMONIC ANALYSIS
+=============================
+
+After getting the correct plot:
+
+1. Find peaks using scipy.signal.find_peaks()
+2. Identify 1st and 10th harmonic peaks
+3. Calculate discrepancy:
+   - Expected 10th harmonic: 10 * (frequency of 1st peak)
+   - Actual 10th harmonic: measured frequency
+   - Percentage error = 100 * (actual - expected) / expected
+
+4. Convert to various units:
+   - Hz: discrepancy_normalized * 44100
+   - Ratio: actual_freq / expected_freq
+   - Cents: (1200/ln(2)) * ln(ratio)
+
+KEY DEBUGGING POINTS:
+====================
+- omega must be in RADIANS (0 to π) for calculations
+- normalized frequency (0 to 0.5) is ONLY for plotting x-axis
+- The L+0.5 in denominator represents the half-sample delay of lowpass filter
+- R^L term causes slight detuning of harmonics
