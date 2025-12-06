@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as sciSig
 import os
+import sys
+from contextlib import redirect_stdout
+
 
 def calcCentVal(a0, a1):
     '''
@@ -18,7 +21,7 @@ def calcCentVal(a0, a1):
     
     count = len(lVals)
     num = lVals[0] - lVals[count-1]+1
-    print(f"Problem [1]: frequency range between A{a0} and A{a1}")
+    print(f"[1]: frequency range between A{a0} and A{a1}")
     print("This range has", num, "distinct pitches")
     print("the L-Values in this range are", lVals[::-1])
 
@@ -40,14 +43,13 @@ def calcCentVal(a0, a1):
             freqRatio = combFreq / pianoFreq
             if (cent5Lower <= freqRatio) & (freqRatio <= cent5Upper):
                 cent5Tolerance.append(combFreq)
-    print("Frequencies in this range that are in the 5 cent tolerance are", cent5Tolerance)
+    print("Frequencies in this range that are in the 5 cent tolerance are", cent5Tolerance, "\n")
 
-def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
+def Resonance_PluckedString(L_Val, R_Val, numHarmonix, sampleRate):
     numPoints = 2000    
     frequencyArray = np.linspace(0, np.pi, numPoints)
-    normalOmega = []
-    for omega in frequencyArray:
-        normalOmega.append(omega / (2* np.pi))
+    normalOmega = np.array([omega / (2 * np.pi) for omega in frequencyArray])
+
 
     def TransferFunction(freqArray, L, R):
         numerator_r = []
@@ -150,11 +152,51 @@ def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
         plt.savefig('../output/pluckedString.png')
     Plot(frequencyArray,normalOmega, decibels, expectedRads)
 
+    def HarmonicAnalyze(normalizedFreq, magnitudeDB):
+        peaks, properties = sciSig.find_peaks(
+            magnitudeDB
+            , height=0
+            , prominence=10
+            , distance=30
+        )
+        peakFreq = normalizedFreq[peaks]
+        peakMag = magnitudeDB[peaks]
+
+        # harmonicRange = np.arange(1, numHmx+1) / (lval + 0.5)
+        expectedTenth = peakFreq[0] * 10
+        tenthHmx = peakFreq[9]
+        error = 100 * ((tenthHmx - expectedTenth) / expectedTenth)
+        return error, tenthHmx, expectedTenth, peakMag
+    
+    hmxResults = HarmonicAnalyze(normalOmega, decibels)
+    error = hmxResults[0]
+    tenthActual = hmxResults[1]
+    tenthExpected = hmxResults[2]
+    print(f"[2b]: calculated tenth harmonic is {tenthExpected:.5f}dB.")
+    print(f"Actual tenth harmonic is {tenthActual:.5f}dB")
+    print(f"This represents an error of {np.abs(error):.2f}%\n")
+
+    discrepancy = tenthActual - tenthExpected
+    discrepancy = discrepancy * sampleRate
+    print(f"[2c] with sample rate {sampleRate}:")
+    print(f" this discrepancy is {discrepancy:.5f}Hz\n")
+
+    freqRatio = tenthActual / tenthExpected
+    print(f"[2d] The frequency ratio for this discrepancy is {freqRatio:.6f}")
+    print(f"Values > 1 are sharp, < 1 are flat.\n")
+
+    cents = (1200 / np.log(2)) * np.log(freqRatio)
+    print(f"[2e] Given that one semitone is 100 cents with formula:")
+    print(f"cent = [1200 / ln 2] * [ln * Frequency Ratio]")
+    print(f"This discrepancy is a factor of {cents:.5f} cents\n")
 
 
 def main():
-    # calcCentVal(220, 1760)
-    Resonance_PluckedString(32, 0.999, 16)
+    os.makedirs('../output', exist_ok=True)
+    with open('../output/results.txt', 'w') as f:
+        with redirect_stdout(f):
+            calcCentVal(220, 1760)
+            Resonance_PluckedString(32, 0.999, 16, 44100)
 
 if __name__ == "__main__":
     main()
