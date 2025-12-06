@@ -42,20 +42,12 @@ def calcCentVal(a0, a1):
                 cent5Tolerance.append(combFreq)
     print("Frequencies in this range that are in the 5 cent tolerance are", cent5Tolerance)
 
-def Resonance_PluckedString(L_Val, R_Val, sampleRate):
-    numSamples = int(sampleRate/L_Val)
-    
-    def freqGrid(numSamples):
-        omega = 0
-        sampleStep = np.pi/numSamples
-        freqs = []
-        for i in range(numSamples):
-            normal = 0.5 / np.pi
-            freqs.append(omega * normal)
-            omega += sampleStep
-        # print(freqs)
-        return freqs
-    frequencyArray = freqGrid(numSamples)
+def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
+    numPoints = 2000    
+    frequencyArray = np.linspace(0, np.pi, numPoints)
+    normalOmega = []
+    for omega in frequencyArray:
+        normalOmega.append(omega / (2* np.pi))
 
     def TransferFunction(freqArray, L, R):
         numerator_r = []
@@ -63,7 +55,7 @@ def Resonance_PluckedString(L_Val, R_Val, sampleRate):
         denom_r = []
         denom_i = []
         for omega in freqArray:
-            real_n = (np.cos(L + 1)* omega) + np.cos(L*omega)
+            real_n = np.cos((L + 1)* omega) + np.cos(L*omega)
             numerator_r.append(real_n)
             
             real_d = 2*np.cos( (L + 0.5)* omega) - R*np.cos(omega) - pow(R, L)
@@ -104,26 +96,45 @@ def Resonance_PluckedString(L_Val, R_Val, sampleRate):
         return decibels
     decibels = np.array(MagnitudeResponse(transferRes))
     
-    def Plot(freqArray, decibelMag):
+    def ResonanceMarkers(harmonics, lVal):
+        lRatio = lVal + 0.5
+        expected = np.arange(1, harmonics+1) / lRatio
+        omegaExpected = []
+        for omega in expected:
+            omegaExpected.append(omega * 2 * np.pi)
+        return omegaExpected
+    expected = np.array(ResonanceMarkers(numHarmonix, L_Val))
+    
+    def ExpectedMagnitude(frequencyArray, decibelArray, expectedOmega):
+        markerMag = []
+        for omega in expectedOmega:
+            closest = np.argmin(np.abs(frequencyArray - omega))
+            markerMag.append(decibelArray[closest])
+        return markerMag
+    
+    def Plot(freqArray, decibelMag, expectedPeaks):
         plt.figure(figsize=(10,6))
-        plt.plot(freqArray, decibelMag)
+        plt.plot(freqArray, decibelMag, 'b-', linewidth=1)
         plt.ylim(-20,50)
         plt.ylabel("Magnitude Response, dB")
 
-        plt.xlim(0, 0.5)
+        plt.xlim(-0.025, 0.5)
         plt.xlabel("Frequency, fractions of sample rate")
 
+        magOmegas = ExpectedMagnitude(freqArray, decibelMag, expected)
+        plt.plot(expectedPeaks / (2 * np.pi), magOmegas, 'v', markersize=8, color='red')
+        
         plt.title("Plucked String Filter Response")
         plt.grid(True)
         os.makedirs('../output', exist_ok=True)
         plt.savefig('../output/pluckedString.png')
-    
-    Plot(frequencyArray, decibels)
+    Plot(normalOmega, decibels, expected)
+
 
 
 def main():
     # calcCentVal(220, 1760)
-    Resonance_PluckedString(32, 0.999, 44100)
+    Resonance_PluckedString(32, 0.999, 16)
 
 if __name__ == "__main__":
     main()
