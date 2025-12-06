@@ -101,7 +101,7 @@ def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
         expected = np.arange(1, harmonics+1) / lRatio
         omegaExpected = []
         for omega in expected:
-            omegaExpected.append(omega * 2 * np.pi)
+            omegaExpected.append(omega * np.pi)
         return omegaExpected
     expected = np.array(ResonanceMarkers(numHarmonix, L_Val))
     
@@ -112,23 +112,35 @@ def Resonance_PluckedString(L_Val, R_Val, numHarmonix):
             markerMag.append(decibelArray[closest])
         return markerMag
     
-    def Plot(freqArray, decibelMag, expectedPeaks):
+    def Plot(omegaArray, normalizedFreq, decibelMag, expectedOmega):
+        """
+        Plot the frequency response of a plucked string filter
+        Args:
+            omegaArray: np.array 
+                Frequency values in the range [0, π]
+            normalizedFreq: list 
+                Omega values normalized to [0, 0.5]
+            decibelMag: np.array 
+                Magnitude response in dB
+            expectedOmega: np.array 
+                Expected calculated resonance frequencies (peaks) in radians
+        """
         plt.figure(figsize=(10,6))
-        plt.plot(freqArray, decibelMag, 'b-', linewidth=1)
+        plt.plot(normalizedFreq, decibelMag, 'b-', linewidth=1)
         plt.ylim(-20,50)
         plt.ylabel("Magnitude Response, dB")
 
         plt.xlim(-0.025, 0.5)
         plt.xlabel("Frequency, fractions of sample rate")
 
-        magOmegas = ExpectedMagnitude(freqArray, decibelMag, expected)
-        plt.plot(expectedPeaks / (2 * np.pi), magOmegas, 'v', markersize=8, color='red')
+        magOmegas = ExpectedMagnitude(omegaArray, decibelMag, expectedOmega)
+        plt.plot(expectedOmega / (2 * np.pi), magOmegas, 'v', markersize=8, color='red')
         
         plt.title("Plucked String Filter Response")
         plt.grid(True)
         os.makedirs('../output', exist_ok=True)
         plt.savefig('../output/pluckedString.png')
-    Plot(normalOmega, decibels, expected)
+    Plot(frequencyArray,normalOmega, decibels, expected)
 
 
 
