@@ -1,0 +1,171 @@
+PARTS B-E: HARMONIC ANALYSIS IMPLEMENTATION
+============================================
+
+Now that your graph is working, here's how to complete the analysis:
+
+PART B - VERIFY 10TH HARMONIC DISCREPANCY (0.027%)
+----------------------------------------------------
+
+Add this analysis after your plotting:
+
+def AnalyzeHarmonics(normalizedFreq, magnitudeDB, L_val):
+    """Analyze harmonic peaks and calculate discrepancies"""
+    
+    # Step 1: Find all peaks
+    # Use scipy.signal.find_peaks with appropriate parameters
+    peaks, properties = sciSig.find_peaks(
+        magnitudeDB, 
+        height=0,           # Only peaks above 0 dB
+        prominence=10,      # Minimum prominence
+        distance=30         # Minimum distance between peaks
+    )
+    
+    # Step 2: Get peak frequencies
+    peak_frequencies = normalizedFreq[peaks]
+    peak_magnitudes = magnitudeDB[peaks]
+    
+    # Step 3: Identify specific harmonics
+    # First harmonic should be near 1/32.5 = 0.0308
+    first_harmonic_idx = 0  # First peak
+    tenth_harmonic_idx = 9  # Tenth peak
+    
+    first_freq = peak_frequencies[first_harmonic_idx]
+    tenth_freq = peak_frequencies[tenth_harmonic_idx]
+    
+    # Step 4: Calculate discrepancy
+    expected_tenth = 10 * first_freq
+    actual_tenth = tenth_freq
+    
+    # Percentage error
+    percent_error = 100 * (actual_tenth - expected_tenth) / expected_tenth
+    
+    print(f"\nPART B - 10th Harmonic Analysis:")
+    print(f"  First harmonic at: {first_freq:.6f}")
+    print(f"  Tenth harmonic at: {tenth_freq:.6f}")
+    print(f"  Expected tenth: {expected_tenth:.6f}")
+    print(f"  Percentage error: {percent_error:.4f}%")
+    
+    return first_freq, tenth_freq, expected_tenth, percent_error
+
+PART C - CONVERT TO HZ
+----------------------
+
+def DiscrepancyInHz(actual_tenth, expected_tenth, sample_rate):
+    """Convert normalized frequency discrepancy to Hz"""
+    
+    discrepancy_normalized = actual_tenth - expected_tenth
+    discrepancy_hz = discrepancy_normalized * sample_rate
+    
+    print(f"\nPART C - Discrepancy in Hz:")
+    print(f"  Normalized discrepancy: {discrepancy_normalized:.6f}")
+    print(f"  Discrepancy in Hz: {discrepancy_hz:.2f} Hz")
+    
+    return discrepancy_hz
+
+PART D - FREQUENCY RATIO
+------------------------
+
+def FrequencyRatio(actual_tenth, expected_tenth):
+    """Calculate frequency ratio"""
+    
+    ratio = actual_tenth / expected_tenth
+    
+    print(f"\nPART D - Frequency Ratio:")
+    print(f"  Actual/Expected ratio: {ratio:.6f}")
+    print(f"  (Values > 1 mean sharp, < 1 mean flat)")
+    
+    return ratio
+
+PART E - CONVERT TO CENTS
+-------------------------
+
+def DiscrepancyInCents(frequency_ratio):
+    """Convert frequency ratio to cents"""
+    
+    cents = (1200 / np.log(2)) * np.log(frequency_ratio)
+    
+    print(f"\nPART E - Discrepancy in Cents:")
+    print(f"  Cents: {cents:.2f}")
+    print(f"  (For reference: 1 semitone = 100 cents)")
+    
+    # Additional context
+    if abs(cents) < 5:
+        print(f"  This is within 5 cents (barely perceptible)")
+    else:
+        print(f"  This exceeds 5 cents (noticeable to trained ears)")
+    
+    return cents
+
+COMPLETE ANALYSIS FUNCTION
+---------------------------
+
+def CompleteHarmonicAnalysis(normalizedFreq, magnitudeDB, L_val, sample_rate):
+    """Run complete harmonic analysis for parts B-E"""
+    
+    # Part B
+    first, tenth_actual, tenth_expected, percent_err = AnalyzeHarmonics(
+        normalizedFreq, magnitudeDB, L_val
+    )
+    
+    # Verify it's approximately 0.027%
+    if abs(percent_err - 0.027) < 0.01:
+        print("  ✓ Verified: Close to 0.027% as stated in textbook")
+    else:
+        print(f"  ⚠ Warning: Expected ~0.027%, got {percent_err:.4f}%")
+    
+    # Part C
+    hz_diff = DiscrepancyInHz(tenth_actual, tenth_expected, sample_rate)
+    
+    # Part D
+    ratio = FrequencyRatio(tenth_actual, tenth_expected)
+    
+    # Part E
+    cents = DiscrepancyInCents(ratio)
+    
+    # Summary table
+    print("\n" + "="*50)
+    print("SUMMARY OF RESULTS")
+    print("="*50)
+    print(f"10th Harmonic Discrepancy:")
+    print(f"  As percentage: {percent_err:.4f}%")
+    print(f"  In Hz: {hz_diff:.2f} Hz")
+    print(f"  As ratio: {ratio:.6f}")
+    print(f"  In cents: {cents:.2f} cents")
+    
+    return {
+        'percent_error': percent_err,
+        'hz': hz_diff,
+        'ratio': ratio,
+        'cents': cents
+    }
+
+INTEGRATION WITH YOUR CODE
+--------------------------
+
+In your main function, after plotting:
+
+def main():
+    # Your existing code
+    L = 32
+    R = 0.999
+    fs = 44100
+    
+    # Generate plot
+    Resonance_PluckedString(L, R, 16)
+    
+    # Add harmonic analysis
+    # You'll need to return normalizedFreq and decibels from Resonance_PluckedString
+    # Then call:
+    results = CompleteHarmonicAnalysis(normalOmega, decibels, L, fs)
+
+EXPECTED RESULTS
+----------------
+Based on the textbook and Karplus-Strong theory:
+
+Part B: ~0.027% error (very small)
+Part C: ~3-5 Hz (depends on exact peak positions)  
+Part D: ~1.00027 (very close to 1)
+Part E: ~0.47 cents (imperceptible to human ear)
+
+These small discrepancies are due to the lowpass filter
+in the feedback loop causing slight detuning of harmonics.
