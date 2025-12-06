@@ -31,3 +31,7 @@
 # Visual Studio Code
 .history/
 *.code-workspace
+
+
+# python
+*.pyc

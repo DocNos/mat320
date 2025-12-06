@@ -30,19 +30,27 @@ def record_with_beep(duration=1.0, sample_rate=16000):
 
 
 def decode_audio(audio_binary):
-    """Decode WAV audio file."""
-    # TODO: Use tf.audio.decode_wav()
-    # TODO: Squeeze to remove extra dimensions
-    pass
+    """Decode WAV audio file.
+    (TensorSpec(
+    shape=(None, 16000, None)
+    , dtype=tf.float32, name=None),
+
+    TensorSpec(shape=(None,)
+    , dtype=tf.int32, name=None))
+    """
+    audio, _ = tf.audio.decode_wav(audio_binary)
+    return tf.squeeze(audio, axis=-1)
 
 
 def get_spectrogram(waveform):
     """Convert audio waveform to spectrogram using STFT."""
     # TODO: Pad waveform to consistent length (16000 samples)
-    # TODO: Use tf.signal.stft() to create spectrogram
-    # TODO: Take absolute value
+    spect = tf.signal.stft(
+        waveform, frame_length=255, frame_step=128
+    )
+    spect = tf.abs(spect)
     # TODO: Add channel dimension
-    pass
+    return spect[..., tf.newaxis]
 
 
 def save_audio(audio, filename, sample_rate=16000):
