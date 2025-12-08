@@ -1,0 +1,287 @@
+\documentclass[8pt,landscape,a4paper]{article}
+\usepackage[top=0cm,bottom=0.2cm,left=0.1cm,right=0.1cm]{geometry}
+\usepackage{multicol}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\setlength{\columnseprule}{0.1pt}
+\setlength{\columnsep}{1em}
+\setlist{nosep,leftmargin=*,topsep=0pt}
+\newcommand{\important}[1]{\colorbox{yellow!25}{$\displaystyle #1$}}
+\pagestyle{empty}
+
+\begin{document}
+\begin{multicols}{4}
+\scriptsize
+
+\subsubsection*{\centering{Feedforward Filters}}
+
+\begin{multicols}{2}
+\centering{\textbf{General Form\\}
+$y_t = x_t + ax_{t-1}$ \\
+$H(\omega) = 1 + ae^{-i\omega}$
+$H(z) = 1 + az^{-1}$ \\
+$|H(\omega)| = ({1  + a^2 + 2a\cos(\omega)})^\frac{1}{2}$ 
+
+\textbf{Inverse Comb}}\\
+$y_t = x_t + ax_{t-L}$
+$H(\omega) = 1 + ae^{-i\omega L}$
+$H(z) = 1 + az^{-L}$
+$|H| = |2\sin(\omega L/2)|$ \\
+... \\
+\end{multicols}
+\begin{multicols}{2}
+\textbf{Zeroes}\\ $z^L = -1/a$ \\ \\
+\textbf{Comb} \\ $|H| = |2\cos(\omega L/2)|$ \\
+... \\
+\centering{\textbf{Transfer Function}}
+$y_t = x_t + ax_{t-1} $ \\
+$\textbf{Y} = \textbf{X}(1 + az^{-1}) $ \\
+$\frac{\textbf{Y}}{\textbf{X}} = (1 + az^{-1}) $ \\
+$H(z) = 1 + az^{-1}$ \\
+... \\ 
+\end{multicols}
+
+\centering{
+\textbf{Phase Response}[$R_\omega e^{i\theta\omega}$]
+\textsc{$R_\omega$: magnitude response }
+}
+\begin{multicols}{2}
+$y_t = x_t - 2x_{t-1} $ \\
+$H(\omega) = 1 - 2e^{-i\omega} = \frac{e^{i\omega} - 2}{e^{i\omega}}$ \\
+$|H(\omega)| = [5 - 2cos(\omega)]^{1/2}$ \\
+$\theta_\omega = tan^{-1}(\frac{2sin(\omega)}{1-2cos(\omega)})$\\
+$\theta_\omega = tan^{-1}(\frac{Imaginary Part}{RealPart})$\\
+$e^{i\theta\omega} = \frac{H(\omega)}{|H(\omega)|}$
+$\theta_\omega H(\omega) = e^{i\omega}(1 + ae^{-i\omega})$ \\
+\end{multicols}
+
+
+
+
+\textbf{Palindromic Phase Response} \\
+\textsc{Odd terms}\\
+$H(z) = 2 + z^{-1} - 3z^{-2} +z^{-3} +2z^{-4}$\\
+$H(\omega) = 2 + e^{-i\omega} - 3e^{-2i\omega} + e^{-3i\omega} + 2e^{-4i\omega}$\\
+$H(\omega) = e^{-i2\omega}[4cos(2\omega) + 2cos(\omega) -3]$ \\
+$|H(\omega)| = 4cos(2\omega) + 2cos(\omega) -3$ \\
+$ \theta_\omega = -2\omega$\\
+...\\
+\textsc{Even terms}\\
+$y_t = x_t + \frac{1}{3}x_{t-1} + \frac{1}{3}x_{t-2}+ x_{t-3}$ \\
+$H(\omega) = 1 + \frac{1}{3}e^{-i\omega} + \frac{1}{3}e^{-2i\omega}+ e^{-3i\omega}$ \\
+$H(\omega) = e^{-3i\frac{\omega}{2}}[e^{3i\frac{\omega}{2}} + \frac{1}{3}
+e^{i\frac{\omega}{2}} + \frac{1}{3}e^{-i\frac{\omega}{2}} + e^{-3i\frac{\omega}{2}}]$\\
+\textsc{Collect cos with}\\
+$ e^{i\frac{\omega}{2}} + e^{-i\frac{\omega}{2}} = 2cos(\frac{\omega}{2})$
+
+\begin{multicols}{2}
+\centering{
+\textbf{Phasors} \\
+$f(t) = e^{i\omega t}$ \\
+$\omega$ = angular freq (rad/s)
+Frequency: $f = \frac{\omega}{2\pi}$ Hz \\
+Period: $T = \frac{2\pi}{\omega} = \frac{1}{f}$ seconds \\
+Function $f(z) = \alpha z$ rotates by $\arg(\alpha)$, scales by $|\alpha|$
+\textbf{Aliasing}\\
+Sample rate: $f_s$ Hz
+Nyquist frequency: $f_s/2$
+$f_{alias} = |f - nf_s|$ (choose $n$ to minimize)
+}
+\end{multicols}
+
+\subsubsection*{Feedback Filters}
+\textbf{First Order:} $y_t = x_t + Ry_{t-1}$
+\begin{itemize}
+\item $H(z) = \frac{1}{1-Rz^{-1}} = \frac{z}{z-R}$
+\item Pole at $z = R$ (stable if $|R| < 1$)
+\item Impulse response: $h[n] = R^n u[n]$
+\item $|H(\omega)| = \frac{1}{|1 - Re^{-i\omega}|}$
+\end{itemize}
+
+\textbf{Reson Filter (2-Pole)}\\
+\textbf{Poles:} $z = Re^{\pm i\theta}$
+
+\important{H(z) = \frac{1}{1 - 2R\cos\theta \cdot z^{-1} + R^2z^{-2}}}
+
+\textbf{Properties:}
+\begin{itemize}
+\item Peak at $\omega = \theta$ (resonant freq)
+\item Bandwidth: $B \approx 2(1-R)$
+\item For narrow band: $R \approx 1 - B/2$
+\item Peak gain: $\approx \frac{1}{1-R}$ for $R \approx 1$
+\item Max $|H(\omega)|$: $\approx \frac{1}{\sqrt{1-R^2}}$ at resonance
+\item True max: $\cos(\omega_m) = \frac{1+R^2}{2R}$
+\end{itemize}
+
+\textbf{Implementation:}
+$y_t = x_t + 2R\cos\theta \cdot y_{t-1} - R^2y_{t-2}$
+
+\subsection*{Comb Filter}
+\textbf{Form:} $H(z) = \frac{1}{1 - R^Lz^{-L}}$
+
+\textbf{Impulse Response Sum:}
+$\sum_{t=0}^{\infty} h_t = \frac{1}{1-R^L}$
+
+\textbf{Properties:}
+\begin{itemize}
+\item Peaks at $\omega = 2\pi k/L$
+\item Nulls depend on $R$ value
+\item Creates harmonic series
+\end{itemize}
+
+\subsection*{All-Pass Filter}
+\textbf{General Form:}
+$H(z) = \frac{a + z^{-1}}{1 + az^{-1}}$ where $|a| < 1$
+
+\textbf{Properties:}
+\begin{itemize}
+\item $|H(\omega)| = 1$ for all $\omega$
+\item Phase adjustment without magnitude change
+\item Numerator = conjugate reciprocal of denominator
+\item Used for fractional delay
+\end{itemize}
+
+\textbf{Phase Delay:}
+$\tau(\omega) = \frac{-2\arctan(\frac{a\sin\omega}{1+a\cos\omega})}{\omega}$
+
+\subsection*{Plucked String (Karplus-Strong)}
+\textbf{Components:}
+\begin{itemize}
+\item Delay line: $L$ samples
+\item Low-pass: $y = \frac{1}{2}(x_t + x_{t-1})$, adds 0.5 delay
+\item All-pass: fine tuning
+\end{itemize}
+
+\textbf{Frequency Tuning:}
+\begin{itemize}
+\item Period: $P = f_s/f_0$ samples
+\item Integer delay: $L = \lfloor P \rfloor$
+\item Fractional: $\delta = P - L$
+\item All-pass coeff: $a = \frac{1-\delta}{1+\delta}$
+\end{itemize}
+
+
+
+
+\centering{
+\subsection*{Calculations}
+
+\textbf{Quantization}\\
+\textbf{Uniform Error $[-0.5, 0.5]$:}
+RMS = $\frac{1}{2\sqrt{3}} \approx 0.289$
+\important{\text{dB} = 20\log_{10}(A)}
+\begin{multicols}{2}
+\centering{\textbf{Unit Circle}} \\
+$e^{i\pi/2}=i$, $e^{i\pi}=-1$, $e^{i3\pi/2}=-i$, $e^{i2\pi}=1$
+$e^{i\pi/3}=\frac{1}{2}+\frac{\sqrt{3}}{2}i$, $e^{i2\pi/3}=-\frac{1}{2}+\frac{\sqrt{3}}{2}i$
+$e^{i\pi/4}=\frac{1+i}{\sqrt{2}}$, $e^{i\pi/6}=\frac{\sqrt{3}}{2}+\frac{1}{2}i$\\
+
+\textbf{\centering{Complex Arithmetic}}
+\centering{
+$z = a + bi = re^{i\theta}$, $r = |z| = \sqrt{a^2 + b^2}$ \\
+$i^2=-1$, $i^3=-i$, $i^4=1$, $i^5=i$} 
+\end{multicols}
+
+
+
+\textbf{Operations}\\
+$(a+bi)(c+di) = (ac-bd) + (ad+bc)i$ \\
+$\frac{a+bi}{c+di} = \frac{(ac+bd) + (bc-ad)i}{c^2+d^2}$
+$(re^{i\theta})^n = r^ne^{in\theta}$ \\
+Conjugate: $\bar{z} = a-bi = re^{-i\theta}$ \\
+Rotation by $\theta$: multiply by $e^{i\theta}$
+
+\textbf{\centering{Trig Identities}}
+\begin{multicols}{2}
+    $|1 + e^{i\omega}| = |2\cos(\omega/2)|$
+$|1 - e^{i\omega}| = |2\sin(\omega/2)|$
+$(a+bi)(a-bi) = a^2 + b^2$
+$e^{it} - e^{-it} = 2i\sin(t)$
+$e^{it} + e^{-it} = 2\cos(t)$ \\
+\end{multicols}
+
+\textbf{Quadratic from Complex Roots \\}
+$(x-(a+bi))(x-(a-bi)) = x^2 - 2ax + (a^2+b^2)$ \\
+\textbf{\centering{Cubic Factoring}\\}
+$x^3 + 1 = (x+1)(x^2-x+1)$
+$x^3 - 1 = (x-1)(x^2+x+1)$
+
+\begin{multicols}{2}
+\textbf{Taylor Series}\\
+$e^{ix} = 1 + i\frac{\pi}{2} + \frac{i(\frac{\pi}{2})^3}{3!} + \cdots$ \\
+\important{\sum_{k=0}^{\infty} \frac{x^k}{k!} = e^{ix}}\\
+\textbf{Product} $\prod_{k=1}^n e^{ik\theta} = e^{i\theta n(n+1)/2}$
+
+\textbf{Geometric Series}
+\important{\sum_{k=0}^{n} e^{ik\theta} = \frac{1-{(e^{i\theta})}^{n-k}}{1-e^{i\theta}}}
+\end{multicols}}
+$+3$dB = $\sqrt{2}\times$ amplitude\\
+$+6$dB = $2\times$ amplitude\\
+$+20$dB = $10\times$ amplitude\\
+
+\textbf{DFT \& Fourier Basis}\\
+\textbf{Basis Vectors:} $u_k[n] = e^{i2\pi kn/N}$
+
+\textbf{Orthogonality:} $u_k \cdot u_j = N\delta_{kj}$
+
+\important{X[k] = \sum_{n=0}^{N-1} x[n]e^{-i2\pi kn/N}}
+
+\important{x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k]e^{i2\pi kn/N}}
+
+\textbf{Coefficient:} $c_k = X[k]/N$
+
+\textbf{Inner Product:} $\langle u,v \rangle = \sum_n \bar{u}_n v_n$
+
+
+
+
+
+
+
+\subsection*{Square Wave Fourier}
+Period $T$, 50\% duty cycle:
+$$c_k = \begin{cases}
+0 & k \text{ even} \\
+\frac{4}{k\pi} & k \text{ odd}
+\end{cases}$$
+
+\textbf{General Fourier:}
+$c_k = \frac{1}{T}\int_0^T s(t)e^{-i2\pi kt/T}dt$
+
+\subsection*{Filter Combinations}
+\begin{itemize}
+\item \textbf{Cascade:} $H_{total} = H_1 \cdot H_2$
+\item \textbf{Parallel:} $H_{total} = H_1 + H_2$
+\item \textbf{Feedback:} $H_{total} = \frac{GH}{1-FH}$
+\end{itemize}
+
+
+\subsection*{Phase Properties}
+\textbf{Linear Phase:}
+\begin{itemize}
+\item Symmetric coefficients
+\item $\phi(\omega) = -\omega D$ where $D$ = group delay
+\item No distortion of wave shape
+\end{itemize}
+
+\textbf{Phase Delay vs Group Delay:}
+\begin{itemize}
+\item Phase delay: $\tau_p = -\phi(\omega)/\omega$
+\item Group delay: $\tau_g = -d\phi/d\omega$
+\end{itemize}
+
+\subsection*{Critical Exam Formulas}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Formula} \\
+\hline
+Complex dot & $(a_1,b_1)\cdot(a_2,b_2) = \bar{a}_1a_2 + \bar{b}_1b_2$ \\
+Parseval & $\frac{1}{T}\int|s|^2dt = \sum|c_k|^2$ \\
+Impulse & $\delta[n] = \{1$ if $n=0$, $0$ else$\}$ \\
+\hline
+\end{tabular}
+
+\end{multicols}
+\end{document}

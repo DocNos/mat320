@@ -1,0 +1,323 @@
+\documentclass[10pt,landscape,a4paper]{article}
+\usepackage[top=0.3cm,bottom=0.3cm,left=0.3cm,right=0.3cm]{geometry}
+\usepackage{multicol}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage[dvipsnames]{xcolor}
+\setlength{\columnseprule}{0.4pt}
+\setlength{\columnsep}{0.7em}
+\newcommand{\problem}[1]{\textbf{\colorbox{cyan!15}{#1}}}
+\newcommand{\answer}[1]{\colorbox{green!15}{#1}}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{multicols}{3}
+\scriptsize
+
+\section*{Worked Examples}
+
+\subsection*{Complex Arithmetic}
+
+\problem{Ex 1: Simplify $(1-i)^{12}$}
+
+\textbf{Step 1:} Convert to polar
+\begin{itemize}
+\item $|1-i| = \sqrt{1^2 + 1^2} = \sqrt{2}$
+\item Angle: $\theta = -\pi/4$ (4th quadrant)
+\item So $1-i = \sqrt{2}e^{-i\pi/4}$
+\end{itemize}
+
+\textbf{Step 2:} Apply power rule
+\begin{itemize}
+\item $(1-i)^{12} = (\sqrt{2})^{12} \cdot e^{-12i\pi/4}$
+\item $= 2^6 \cdot e^{-3i\pi} = 64 \cdot e^{-3i\pi}$
+\end{itemize}
+
+\textbf{Step 3:} Convert back
+\begin{itemize}
+\item $e^{-3i\pi} = e^{-i\pi} = -1$
+\item Final: $64 \cdot (-1) = \answer{-64}$
+\end{itemize}
+
+\problem{Ex 2: Complex product $(1/2+\sqrt{3}/2\cdot i)(1/2-\sqrt{3}/2\cdot i)$}
+
+\textbf{Method 1 - Conjugate Pattern:}
+\begin{itemize}
+\item Pattern: $(a+bi)(a-bi) = a^2 + b^2$
+\item Here: $a = 1/2$, $b = \sqrt{3}/2$
+\item Result: $(1/2)^2 + (\sqrt{3}/2)^2 = 1/4 + 3/4 = \answer{1}$
+\end{itemize}
+
+\textbf{Method 2 - FOIL (verify):}
+\begin{itemize}
+\item Real part: $(1/2)(1/2) - (\sqrt{3}/2)(-\sqrt{3}/2)$
+\item $= 1/4 + 3/4 = 1$
+\item Imaginary: $(1/2)(-\sqrt{3}/2) + (\sqrt{3}/2)(1/2) = 0$
+\item Result: $1 + 0i = \answer{1}$
+\end{itemize}
+
+\problem{Ex 3: Rotate $-1/2+\sqrt{3}/2\cdot i$ by $-\pi/6$}
+
+\textbf{Step 1:} Identify original angle
+\begin{itemize}
+\item This is $e^{i2\pi/3}$ (120 degrees)
+\item Verify: $\cos(2\pi/3) = -1/2$, $\sin(2\pi/3) = \sqrt{3}/2$
+\end{itemize}
+
+\textbf{Step 2:} Apply rotation
+\begin{itemize}
+\item Multiply by $e^{-i\pi/6}$ to rotate clockwise
+\item $e^{i2\pi/3} \cdot e^{-i\pi/6} = e^{i(2\pi/3 - \pi/6)}$
+\item $= e^{i(4\pi/6 - \pi/6)} = e^{i\pi/2}$
+\end{itemize}
+
+\textbf{Step 3:} Convert to rectangular
+\begin{itemize}
+\item $e^{i\pi/2} = \cos(\pi/2) + i\sin(\pi/2) = 0 + i = \answer{i}$
+\end{itemize}
+
+\subsection*{Polynomial Factoring}
+
+\problem{Factor $x^3 + 1$ and find all roots}
+
+\textbf{Step 1:} Use sum of cubes formula
+\begin{itemize}
+\item $x^3 + 1 = (x+1)(x^2-x+1)$
+\item First root: $x = -1$
+\end{itemize}
+
+\textbf{Step 2:} Quadratic formula on $x^2 - x + 1 = 0$
+\begin{itemize}
+\item $x = \frac{1 \pm \sqrt{1-4}}{2} = \frac{1 \pm \sqrt{-3}}{2}$
+\item $= \frac{1 \pm i\sqrt{3}}{2}$
+\end{itemize}
+
+\textbf{Step 3:} All three roots
+\begin{itemize}
+\item Root 1: $x = -1$
+\item Root 2: $x = \frac{1 + i\sqrt{3}}{2} = e^{i\pi/3}$
+\item Root 3: $x = \frac{1 - i\sqrt{3}}{2} = e^{-i\pi/3}$
+\item These are the three cube roots of -1
+\end{itemize}
+
+\subsection*{Aliasing}
+
+\problem{Find alias: $f_s = 44100$ Hz, signal = 32100 Hz}
+
+\textbf{Step 1:} Check Nyquist
+\begin{itemize}
+\item Nyquist freq = $f_s/2 = 22050$ Hz
+\item 32100 $>$ 22050, so aliasing occurs
+\end{itemize}
+
+\textbf{Step 2:} Calculate alias frequency
+\begin{itemize}
+\item Use: $f_{alias} = |f - nf_s|$ where $n$ minimizes
+\item $n=0$: $|32100 - 0| = 32100$ Hz
+\item $n=1$: $|32100 - 44100| = 12000$ Hz (smaller!)
+\item $n=2$: $|32100 - 88200| = 56100$ Hz (larger)
+\end{itemize}
+
+\textbf{Step 3:} Verify and conclude
+\begin{itemize}
+\item 12000 Hz is in valid range [0, 22050]
+\item The 32100 Hz signal appears as \answer{12000 Hz}
+\end{itemize}
+
+\subsection*{DFT Calculation}
+
+\problem{Find $X[1]$ for $x = [1, 0, 1]$, $N=3$}
+
+\textbf{Step 1:} Write DFT formula
+$$X[k] = \sum_{n=0}^{N-1} x[n]e^{-i2\pi kn/N}$$
+
+\textbf{Step 2:} Substitute values ($k=1$, $N=3$)
+\begin{itemize}
+\item $X[1] = x[0]e^0 + x[1]e^{-i2\pi/3} + x[2]e^{-i4\pi/3}$
+\item $= 1(1) + 0(e^{-i2\pi/3}) + 1(e^{-i4\pi/3})$
+\item $= 1 + e^{-i4\pi/3}$
+\end{itemize}
+
+\textbf{Step 3:} Simplify the exponential
+\begin{itemize}
+\item $e^{-i4\pi/3} = \cos(-4\pi/3) + i\sin(-4\pi/3)$
+\item $= \cos(4\pi/3) - i\sin(4\pi/3)$
+\item $= -1/2 - i\cdot(-\sqrt{3}/2) = -1/2 + i\sqrt{3}/2$
+\end{itemize}
+
+\textbf{Step 4:} Final answer
+\begin{itemize}
+\item $X[1] = 1 + (-1/2 + i\sqrt{3}/2) = 1/2 + i\sqrt{3}/2$
+\item This equals $e^{i\pi/3}$
+\item DFT coefficient: $c_1 = X[1]/N = \answer{e^{i\pi/3}/3}$
+\end{itemize}
+
+\subsection*{FIR Filter Analysis}
+
+\problem{Analyze $y_t = x_t - (1/4)x_{t-1}$}
+
+\textbf{Step 1:} Transfer function
+\begin{itemize}
+\item Direct: $H(z) = 1 - (1/4)z^{-1}$
+\end{itemize}
+
+\textbf{Step 2:} Find zeros and poles
+\begin{itemize}
+\item Zero: Set $1 - (1/4)z^{-1} = 0$
+\item Solve: $z^{-1} = 4$, so $z = 1/4$
+\item Pole: At $z = 0$ (from $z^{-1}$ term)
+\item \answer{Zero at $z=1/4$, pole at $z=0$}
+\end{itemize}
+
+\textbf{Step 3:} Frequency response at $\omega = 0$
+\begin{itemize}
+\item $H(0) = 1 - (1/4)e^{-i \cdot 0} = 1 - 1/4 = \answer{3/4}$
+\item DC gain is 0.75 (attenuation)
+\end{itemize}
+
+\textbf{Step 4:} Magnitude at $\omega = \pi/2$
+\begin{itemize}
+\item $H(\pi/2) = 1 - (1/4)e^{-i\pi/2}$
+\item $e^{-i\pi/2} = -i$, so $H(\pi/2) = 1 - (1/4)(-i) = 1 + i/4$
+\item $|H(\pi/2)| = |1 + i/4| = \sqrt{1 + 1/16} = \answer{\sqrt{17}/4}$
+\end{itemize}
+
+\subsection*{IIR Filter with Impulse}
+
+\problem{Analyze $y_t = x_t - (1/4)y_{t-1}$, impulse response}
+
+\textbf{Step 1:} Find transfer function
+\begin{itemize}
+\item Rearrange: $y_t + (1/4)y_{t-1} = x_t$
+\item Z-transform: $Y(z)[1 + (1/4)z^{-1}] = X(z)$
+\item $H(z) = 1/[1 + (1/4)z^{-1}] = z/(z + 1/4)$
+\end{itemize}
+
+\textbf{Step 2:} Check stability
+\begin{itemize}
+\item Pole at $z = -1/4$
+\item $|pole| = |-1/4| = 1/4 < 1$ \answer{STABLE}
+\end{itemize}
+
+\textbf{Step 3:} Impulse response calculation
+\begin{itemize}
+\item Input: $x = [1, 0, 0, ...]$
+\item $y_0 = 1 - (1/4)(0) = 1$
+\item $y_1 = 0 - (1/4)(1) = -1/4$
+\item $y_2 = 0 - (1/4)(-1/4) = 1/16$
+\item $y_3 = 0 - (1/4)(1/16) = -1/64$
+\end{itemize}
+
+\textbf{Step 4:} Pattern recognition
+\begin{itemize}
+\item $h[n] = (-1/4)^n$ for $n \geq 0$
+\item Alternating sign, exponential decay
+\item Sum: $\sum h[n] = 1/(1-(-1/4)) = \answer{4/5}$
+\end{itemize}
+
+\subsection*{Reson Filter Design}
+
+\problem{Design reson: $\omega = \pi/4$, bandwidth $B = 0.1$}
+
+\textbf{Step 1:} Calculate pole radius from bandwidth
+\begin{itemize}
+\item Narrow band formula: $B \approx 2(1-R)$
+\item $0.1 = 2(1-R)$, so $1-R = 0.05$
+\item $R = 0.95$
+\end{itemize}
+
+\textbf{Step 2:} Place complex conjugate poles
+\begin{itemize}
+\item Poles at $z = 0.95e^{\pm i\pi/4}$
+\item In rectangular: $0.95 \cdot (\frac{1}{\sqrt{2}} \pm i\frac{1}{\sqrt{2}})$
+\item $= \frac{0.95}{\sqrt{2}}(1 \pm i) = 0.672(1 \pm i)$
+\end{itemize}
+
+\textbf{Step 3:} Write transfer function
+\begin{itemize}
+\item $H(z) = \frac{1}{1 - 2R\cos(\pi/4)z^{-1} + R^2z^{-2}}$
+\item $\cos(\pi/4) = 1/\sqrt{2}$, so $2R\cos(\pi/4) = 2(0.95)/\sqrt{2} = 1.343$
+\item $H(z) = \frac{1}{1 - 1.343z^{-1} + 0.9025z^{-2}}$
+\end{itemize}
+
+\textbf{Step 4:} Calculate peak gain
+\begin{itemize}
+\item At resonance ($\omega = \pi/4$): 
+\item Approximate gain $\approx 1/(1-R) = 1/0.05 = 20$
+\item In dB: $20\log_{10}(20) = \answer{26 dB}$
+\end{itemize}
+
+\subsection*{Plucked String Tuning}
+
+\problem{Tune to 440 Hz, $f_s = 44100$ Hz}
+
+\textbf{Step 1:} Calculate ideal period in samples
+\begin{itemize}
+\item $P = f_s/f_0 = 44100/440 = 100.227$ samples
+\item Need to achieve this total delay
+\end{itemize}
+
+\textbf{Step 2:} Allocate delays
+\begin{itemize}
+\item Try integer delay $L = 100$
+\item Low-pass filter adds 0.5 samples
+\item Total so far: $100 + 0.5 = 100.5$
+\item Still need: $100.227 - 100.5 = -0.273$ (negative!)
+\end{itemize}
+
+\textbf{Step 3:} Adjust allocation
+\begin{itemize}
+\item Use $L = 99$ instead
+\item With LP: $99 + 0.5 = 99.5$
+\item Need from all-pass: $100.227 - 99.5 = 0.727$
+\end{itemize}
+
+\textbf{Step 4:} Calculate all-pass coefficient
+\begin{itemize}
+\item For delay $\delta = 0.727$:
+\item $a = (1-\delta)/(1+\delta) = 0.273/1.727 = \answer{0.158}$
+\end{itemize}
+
+\textbf{Step 5:} Verify total delay
+\begin{itemize}
+\item Integer: 99 samples
+\item Low-pass: 0.5 samples
+\item All-pass: 0.727 samples
+\item Total: $99 + 0.5 + 0.727 = 100.227$ \answer{Perfect!}
+\end{itemize}
+
+\subsection*{All-Pass Identification}
+
+\problem{Is $H(z) = (0.5z + 1)/(z + 0.5)$ all-pass?}
+
+\textbf{Step 1:} Convert to standard form
+\begin{itemize}
+\item Divide num and denom by $z$:
+\item $H(z) = (0.5 + z^{-1})/(1 + 0.5z^{-1})$
+\end{itemize}
+
+\textbf{Step 2:} Check all-pass structure
+\begin{itemize}
+\item All-pass form: $H(z) = (a + z^{-1})/(1 + az^{-1})$
+\item Our filter: numerator has $a = 0.5$
+\item Denominator also has $a = 0.5$
+\item Structure matches! \answer{YES, all-pass}
+\end{itemize}
+
+\textbf{Step 3:} Verify magnitude = 1
+\begin{itemize}
+\item At any frequency: $|H(e^{i\omega})| = |(0.5 + e^{-i\omega})/(1 + 0.5e^{-i\omega})|$
+\item Numerator and denominator have same structure
+\item Can show $|H(e^{i\omega})| = 1$ for all $\omega$
+\end{itemize}
+
+\textbf{Step 4:} Phase delay property
+\begin{itemize}
+\item All-pass changes phase without changing magnitude
+\item Used for fractional delay adjustment
+\item Phase: $\phi(\omega) = -2\arctan(\frac{0.5\sin\omega}{1+0.5\cos\omega})$
+\end{itemize}
+
+\end{multicols}
+\end{document}
