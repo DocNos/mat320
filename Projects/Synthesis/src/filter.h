@@ -3,63 +3,10 @@
 #define _USE_MATH_DEFINES
 
 #include "buzz.h"
-
-#include <map>
-#include <tuple>
-#include <cmath>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <queue>
-#include <random>
-#include <vector>
-#include <string>
-#include <algorithm>
+#include "Data.h"
 
 using namespace std;
 
-enum Scale
-{
-    Major, Minor5, Minor5_Arpeggio
-};
-
-// Map notes to names?
-const map<string, double> 
-NoteFrequencies = {
-    {"middleC", 261.63}, {"c3", (261.63/2)}, {"middleD", 293.66}
-    , {"eFlat", 311.13}, {"middleE", 329.63}, {"middleF", 349.23}
-    , {"fSharp", 369.99}, {"gFlat", 369.99}, {"middleG", 392}
-    , {"a4", 440}, {"bFlat", 466.16}
-};
-
-const map<string, float> 
-r_vals = {
-    {"percussion", 0.990f}, {"rhythm", 0.995f}
-    , {"lead", 0.99985f}
-};
-
-
-struct FilterParams
-{
-    //--------------- Timing
-    unsigned sampleRate = 44100;
-    unsigned duration = 8;
-    unsigned numSamples = sampleRate * duration;
-    double r_val = r_vals.at("rhythm");
-    unsigned numNotes = duration;
-    float noteDuration = 1;
-
-    //--------------- Pitch
-    double frequency = NoteFrequencies.at("middleC");
-    Scale scale = Scale::Major;
-
-    //--------------- Data Organization
-    uint16_t bitsPerSample = 16;
-    unsigned numRand_Samples = 10;
-    uint16_t numChannels = 1;
-    int clampRange = 15000; 
-
-};
 
 struct PluckParams 
 {
@@ -85,78 +32,8 @@ struct ResonParams
 
 class Filter;
 
-struct WavHeader 
-{
-    //------------- File Container Fields
-       char chunkID[4];        // RIFF (Resource Interchange File Format)
-       uint32_t chunkSize;     // File size minus this and preceeding data
-       char format[4];         // "WAVE"
 
-    //------------ Format Description Fields
-       char fmtLabel[4];       // Indicates start of format description
-       uint32_t fmtSize;       // Size of format description (16 for basic Pulse Code Modulation)
-       uint16_t audioFormat;   // 1 for PCM means uncompressed raw audio
-       uint16_t numChannels;   // 1 for mono
-       uint32_t sampleRate;    // 44100 (CD Quality)
-       uint32_t byteRate;      // How many bytes for each second of audio [sampleRate * numChannels * bitsPerSample/8]
-       uint16_t blockAlign;    // Describes how many bytes for a complete sample on all channels [numChannels * bitsPerSample/8]
-       uint16_t bitsPerSample; // 16       
 
-    //------------- Data Description Fields   
-       char subchunk2ID[4];    // Indicates start of data description
-       uint32_t dataSize;      // Size of just the audio samples (exculding size of header) 
-                               // NumSamples * numChannels * bitsPerSample/8                         
-};
-
-inline vector<int16_t> Mix
-(const vector<vector<int16_t>>& voices, unsigned numSamples)
-{
-    int numVoices = voices.size();
-    vector<int16_t> mixed(numSamples);
-    
-    for(unsigned i = 0; i < numSamples; ++i)
-    {
-        int32_t sum = 0;
-        for(int j = 0; j < numVoices; ++j)
-        {
-            sum += voices[j][i];
-        }
-        mixed[i] = static_cast<int16_t>((sum / numVoices));
-    }
-    return mixed;
-}
-
-inline vector<int16_t> BoostAmplitude(vector<int16_t> samples, int16_t boost)
-{
-    for(size_t i = 0; i < samples.size(); ++i) 
-    {
-        int32_t boosted = 
-        static_cast<int32_t>(samples[i]) * boost;
-        samples[i] = 
-        static_cast<int16_t>
-        (clamp(boosted, -32768, 32767));
-    }
-    return samples;
-}
-
-inline void WriteWav(const string& filename, const WavHeader& header, const vector<int16_t>& samples)
-{
-    ofstream wavFile(filename, ios::binary);
-    if (!wavFile.is_open())
-    {
-        cerr << "Error: Could not open file " << filename << " for writing" << endl;
-        return;
-    }
-
-    // Write the header
-    wavFile.write(reinterpret_cast<const char*>(&header), sizeof(WavHeader));
-
-    // Write the sample data
-    wavFile.write(reinterpret_cast<const char*>(samples.data()), samples.size() * sizeof(int16_t));
-
-    wavFile.close();
-    cout << "WAV file written: " << filename << " (" << samples.size() << " samples)" << endl;
-}
 
 
 class Filter
@@ -213,22 +90,7 @@ public:
 };
 
 
-struct ResonPreset 
-{
-    double centerFreq;
-    double bandwidth;
-};
 
-const map<string, ResonPreset> ResonPresets = 
-{
-    {"vowel_a", {730, 50}},      // Formant for "ah" sound
-    {"vowel_e", {530, 50}},      // Formant for "eh" sound
-    {"vowel_i", {270, 40}},      // Formant for "ee" sound
-    {"vowel_o", {570, 50}},      // Formant for "oh" sound
-    {"vowel_u", {440, 40}},      // Formant for "oo" sound
-    {"narrow_440", {440, 20}},   // Very narrow at A4
-    {"wide_1000", {1000, 200}},  // Wide band at 1kHz
-};
 /**
  * ResonFilter - Second-order IIR bandpass filter (reson filter)
  *
@@ -319,46 +181,6 @@ inline bool FindReson(string preset)
 }
 
 
-inline vector<float> CreateSemitones
-(FilterParams params, Scale scale)
-{
-    unsigned dur = params.duration;
-    vector<float> semitones = vector<float>(dur);
-    switch(scale)
-    {
-        case(Major): 
-        {
-            int steps[8] = {0, 2, 4, 5, 7, 9, 11, 12};
-            for(unsigned i = 0; i < dur; ++i)
-            {           
-                semitones[i] = params.frequency *
-                    pow(2.f,(steps[i]% 8)/ 12.f);                             
-            }            
-        } break;
-        case(Minor5):
-        {
-            int steps[8] = {0, 3, 5, 6, 7, 10, 12, 15};
-            for(unsigned i = 0; i < dur; ++i)
-            {
-                semitones[i] = params.frequency *
-                    pow(2.f,(steps[i % 8])/ 12.f);
-            }  
-        }break;
-        case(Minor5_Arpeggio):
-        {
-            int steps[8] = {0, 5, 3, 10, 6, 7, 12, 15};
-            for(unsigned i = 0; i < dur; ++i)
-            {
-                semitones[i] = params.frequency *
-                    pow(2.f,(steps[i % 8])/ 12.f);
-            }  
-        }break;
-        default: break;
-
-    }
-    return semitones;
-    
-}
 
 inline PluckParams calculateParameters
 (Scale scale, unsigned sampleRate

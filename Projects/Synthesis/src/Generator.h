@@ -1,5 +1,5 @@
-#ifndef BUZZ_H
-#define BUZZ_H
+#ifndef GENERATOR_H
+#define GENERATOR_H
 
 #include <vector>
 #include <cmath>
